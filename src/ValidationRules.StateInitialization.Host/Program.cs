@@ -22,7 +22,7 @@ using System.Diagnostics;
 using System.Linq;
 using NuClear.Replication.Core.Tenancy;
 using NuClear.StateInitialization.Core.Commands;
-using NuClear.StateInitialization.Core.Storage;
+using NuClear.ValidationRules.Hosting.Common.Settings;
 
 namespace NuClear.ValidationRules.StateInitialization.Host
 {
@@ -129,7 +129,7 @@ namespace NuClear.ValidationRules.StateInitialization.Host
                 .ApplicationXmlConfig
                 .Console
                 .WithGlobalProperties(x =>
-                    x.Property(TracerContextKeys.Tenant, environmentSettings.EnvironmentName)
+                    x.Property("Environment", environmentSettings.EnvironmentName)
                         .Property(TracerContextKeys.EntryPoint, environmentSettings.EntryPointName)
                         .Property(TracerContextKeys.EntryPointHost, NetworkInfo.ComputerFQDN)
                         .Property(TracerContextKeys.EntryPointInstanceId, Guid.NewGuid().ToString()))

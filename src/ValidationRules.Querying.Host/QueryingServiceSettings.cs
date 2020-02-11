@@ -1,9 +1,6 @@
-﻿using NuClear.River.Hosting.Common.Identities.Connections;
-using NuClear.River.Hosting.Common.Settings;
+﻿using NuClear.River.Hosting.Common.Settings;
 using NuClear.Settings.API;
-using NuClear.Storage.API.ConnectionStrings;
-using NuClear.ValidationRules.Hosting.Common.Identities.Connections;
-using NuClear.ValidationRules.Hosting.Common.Settings.Connections;
+using NuClear.ValidationRules.Hosting.Common.Settings;
 
 namespace NuClear.ValidationRules.Querying.Host
 {
@@ -11,11 +8,9 @@ namespace NuClear.ValidationRules.Querying.Host
     {
         public QueryingServiceSettings()
         {
-            var connectionString = ConnectionStrings.For(AmsConnectionStringIdentity.Instance,
-                                                         LoggingConnectionStringIdentity.Instance);
-
-            Aspects.Use(new ConnectionStringSettingsAspect(connectionString))
-                   .Use<EnvironmentSettingsAspect>();
+            Aspects
+                .Use<TenantConnectionStringSettings>()
+                .Use<EnvironmentSettingsAspect>();
         }
     }
 }

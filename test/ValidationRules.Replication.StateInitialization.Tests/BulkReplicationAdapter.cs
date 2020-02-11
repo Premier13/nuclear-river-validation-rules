@@ -2,6 +2,7 @@
 using NuClear.Replication.Core;
 using NuClear.Replication.Core.Tenancy;
 using NuClear.StateInitialization.Core.Actors;
+using NuClear.ValidationRules.Hosting.Common.Settings;
 
 namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
 {
@@ -14,7 +15,7 @@ namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
         public BulkReplicationAdapter()
         {
             _key = new T();
-            _connectionStringSettings = new RunnerConnectionStringSettings();
+            _connectionStringSettings = new TenantConnectionStringSettings();
         }
 
         public void Act()

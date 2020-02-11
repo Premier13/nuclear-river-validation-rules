@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using NuClear.Replication.Core.Tenancy;
-using NuClear.ValidationRules.SingleCheck.Tenancy;
+using NuClear.ValidationRules.Hosting.Common.Settings;
 
 namespace NuClear.ValidationRules.Querying.Host.Tenancy
 {

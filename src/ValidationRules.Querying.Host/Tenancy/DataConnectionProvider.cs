@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Web.Configuration;
 using System.Linq;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using NuClear.Replication.Core.Tenancy;
 using NuClear.ValidationRules.SingleCheck.Tenancy;
 using NuClear.ValidationRules.Storage;
 
@@ -19,7 +19,7 @@ namespace NuClear.ValidationRules.Querying.Host.Tenancy
         {
             _tenantProvider = tenantProvider;
             _connectionStrings = WebConfigurationManager.ConnectionStrings
-                .Cast<ConnectionStringSettings>()
+                .Cast<System.Configuration.ConnectionStringSettings>()
                 .ToDictionary(x => x.Name, x => x.ConnectionString);
         }
 

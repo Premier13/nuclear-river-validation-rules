@@ -29,6 +29,7 @@ using NuClear.DI.Unity.Config.RegistrationResolvers;
 using NuClear.Jobs;
 using NuClear.Jobs.Schedulers;
 using NuClear.Jobs.Schedulers.Exporter;
+using NuClear.Jobs.Settings;
 using NuClear.Jobs.Unity;
 using NuClear.Messaging.API.Flows;
 using NuClear.Messaging.API.Processing.Actors.Accumulators;
@@ -73,12 +74,10 @@ using NuClear.Replication.OperationsProcessing.Metadata;
 using NuClear.Replication.OperationsProcessing.Transports;
 using NuClear.Replication.OperationsProcessing.Transports.ServiceBus;
 using NuClear.Replication.OperationsProcessing.Transports.ServiceBus.Factories;
-using NuClear.River.Hosting.Common.Identities.Connections;
 using NuClear.River.Hosting.Common.Settings;
 using NuClear.Security;
 using NuClear.Security.API.Auth;
 using NuClear.Security.API.Context;
-using NuClear.Settings.API;
 using NuClear.Settings.Unity;
 using NuClear.Storage.API.ConnectionStrings;
 using NuClear.Storage.API.Readings;
@@ -109,30 +108,24 @@ using Version = NuClear.ValidationRules.Storage.Model.Messages.Version;
 
 namespace NuClear.ValidationRules.Replication.Host.DI
 {
-    public static class Bootstrapper
+    public static partial class Bootstrapper
     {
-        public static IUnityContainer ConfigureUnity(ISettingsContainer settingsContainer, ITracer tracer)
+        public static IUnityContainer ConfigureUnity()
         {
             IUnityContainer container = new UnityContainer();
-            var massProcessors = new IMassProcessor[]
-                                 {
-                                     new TaskServiceJobsMassProcessor(container),
-                                 };
-            var storageSettings = settingsContainer.AsSettings<ISqlStoreSettingsAspect>();
+            var massProcessors = new IMassProcessor[] { new TaskServiceJobsMassProcessor(container) };
 
-            var connectionStringSettings = settingsContainer.AsSettings<IConnectionStringSettings>();
-            var environmentSettings = settingsContainer.AsSettings<IEnvironmentSettings>();
-
-            container.AttachQueryableContainerExtension()
-                     .UseParameterResolvers(ParameterResolvers.Defaults)
-                     .ConfigureMetadata()
-                     .ConfigureSettingsAspects(settingsContainer)
-                     .ConfigureTracing(tracer)
-                     .ConfigureSecurityAspects()
-                     .ConfigureQuartz()
-                     .ConfigureOperationsProcessing(connectionStringSettings, environmentSettings)
-                     .ConfigureStorage(storageSettings, EntryPointSpecificLifetimeManagerFactory)
-                     .ConfigureReplication(EntryPointSpecificLifetimeManagerFactory);
+            container
+                .ConfigureSettingsAspects(new ReplicationServiceSettings())
+                .AttachQueryableContainerExtension()
+                .UseParameterResolvers(ParameterResolvers.Defaults)
+                .ConfigureMetadata()
+                .ConfigureTracing()
+                .ConfigureSecurityAspects()
+                .ConfigureQuartz()
+                .ConfigureOperationsProcessing()
+                .ConfigureStorage(EntryPointSpecificLifetimeManagerFactory)
+                .ConfigureReplication(EntryPointSpecificLifetimeManagerFactory);
 
             ReplicationRoot.Instance.PerformTypesMassProcessing(massProcessors, true, typeof(object));
 
@@ -144,11 +137,6 @@ namespace NuClear.ValidationRules.Replication.Host.DI
         private static LifetimeManager EntryPointSpecificLifetimeManagerFactory()
         {
             return Lifetime.PerScope;
-        }
-
-        private static IUnityContainer ConfigureTracing(this IUnityContainer container, ITracer tracer)
-        {
-            return container.RegisterInstance(tracer);
         }
 
         private static IUnityContainer ConfigureMetadata(this IUnityContainer container)
@@ -182,7 +170,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             this IUnityContainer container)
         {
             return container.ConfigureQuartzRemoteControl()
-                .RegisterType<IJobFactory, JobFactory>(Lifetime.Singleton, new InjectionConstructor(container.Resolve<UnityJobFactory>(), container.Resolve<ITracer>()))
+                .RegisterType<IJobFactory, JobFactory>(Lifetime.Singleton, new InjectionConstructor(typeof(TenantUnityJobFactory), typeof(ITracer)))
                 .RegisterType<IJobStoreFactory, JobStoreFactory>(Lifetime.Singleton)
                 .RegisterType<ISchedulerManager, SchedulerManager>("default", Lifetime.Singleton)
                 .RegisterType<ISchedulerManager, KafkaFactsImportShedulerManager>("kafka", Lifetime.Singleton)
@@ -193,13 +181,11 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             this IUnityContainer container)
         {
             var environmentSettings = container.Resolve<IEnvironmentSettings>();
-            var connectionStringSettings = container.Resolve<IConnectionStringSettings>();
+            var quartzSettings = container.Resolve<IPersistentStoreSettings>();
             var taskServiceRemoteControlSettings = container.Resolve<ITaskServiceRemoteControlSettings>();
 
             if (taskServiceRemoteControlSettings.RemoteControlEnabled)
             {
-                connectionStringSettings.AllConnectionStrings.TryGetValue(InfrastructureConnectionStringIdentity.Instance, out var quartzStoreConnectionString);
-
                 container.RegisterType<ISchedulerExporterProvider, SchedulerExporterProvider>(Lifetime.Singleton,
                              new InjectionConstructor(environmentSettings.EnvironmentName,
                                  typeof(ITaskServiceRemoteControlSettings),
@@ -208,7 +194,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                                  typeof(ITracer)))
                          .RegisterType<ISchedulerExportPortResolver, SchedulerExportPortResolver>(Lifetime.Singleton)
                          .RegisterType<ISchedulerExporterRegistrar, MsSQLPersistenceSchedulerExporterRegistrar>(Lifetime.Singleton,
-                             new InjectionConstructor(quartzStoreConnectionString));
+                             new InjectionConstructor(quartzSettings.ConnectionString));
             }
             else
             {
@@ -218,12 +204,8 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             return container;
         }
 
-        private static IUnityContainer ConfigureOperationsProcessing(
-            this IUnityContainer container,
-            IConnectionStringSettings connectionStringSettings,
-            IEnvironmentSettings environmentSettings)
+        private static IUnityContainer ConfigureOperationsProcessing(this IUnityContainer container)
         {
-
 #if DEBUG
             container.RegisterType<ITelemetryPublisher, DebugTelemetryPublisher>(Lifetime.Singleton);
 #else
@@ -244,17 +226,6 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             container.RegisterType<IEventLogger, SqlEventLogger>();
                      //.RegisterType<IMessageReceiver, SqlEventReceiver>();
 
-            var kafkaSettingsFactory =
-                new KafkaSettingsFactory(new Dictionary<IMessageFlow, string>
-                                             {
-                                                 [AmsFactsFlow.Instance] =
-                                                     connectionStringSettings.GetConnectionString(AmsConnectionStringIdentity.Instance),
-                                                 [RulesetFactsFlow.Instance] =
-                                                     connectionStringSettings.GetConnectionString(RulesetConnectionStringIdentity.Instance)
-                                             },
-                                         environmentSettings
-                                        );
-
             // kafka receiver
             container
                 .RegisterType<BatchingKafkaReceiverTelemetryDecorator<AmsFactsFlowTelemetryPublisher>>(new InjectionConstructor(new ResolvedParameter<KafkaReceiver>(nameof(AmsFactsFlow)),
@@ -265,7 +236,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                 .RegisterType<KafkaReceiver>(nameof(AmsFactsFlow), Lifetime.Singleton)
                 .RegisterType<KafkaReceiver>(nameof(RulesetFactsFlow), Lifetime.Singleton)
                 .RegisterType<IKafkaMessageFlowReceiverFactory, KafkaMessageFlowReceiverFactory>(Lifetime.Singleton)
-                .RegisterInstance<IKafkaSettingsFactory>(kafkaSettingsFactory)
+                .RegisterType<IKafkaSettingsFactory>(Lifetime.Singleton, new InjectionFactory(CreateKafkaSettingsFactory))
                 .RegisterType<KafkaMessageFlowInfoProvider>(Lifetime.Singleton);
 
             return container.RegisterInstance<IParentContainerUsedRegistrationsContainer>(new ParentContainerUsedRegistrationsContainer(), Lifetime.Singleton)
@@ -292,7 +263,26 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                             .RegisterType<IMessageFlowProcessingObserver, NullMessageFlowProcessingObserver>(Lifetime.Singleton);
         }
 
-        private static IUnityContainer ConfigureStorage(this IUnityContainer container, ISqlStoreSettingsAspect storageSettings, Func<LifetimeManager> entryPointSpecificLifetimeManagerFactory)
+        private static KafkaSettingsFactory CreateKafkaSettingsFactory(IUnityContainer container)
+        {
+            var connectionStringSettings = container.Resolve<IConnectionStringSettings>();
+            var environmentSettings = container.Resolve<IEnvironmentSettings>();
+
+            var kafkaSettingsFactory =
+                new KafkaSettingsFactory(new Dictionary<IMessageFlow, string>
+                    {
+                        [AmsFactsFlow.Instance] =
+                            connectionStringSettings.GetConnectionString(AmsConnectionStringIdentity.Instance),
+                        [RulesetFactsFlow.Instance] =
+                            connectionStringSettings.GetConnectionString(RulesetConnectionStringIdentity.Instance)
+                    },
+                    environmentSettings
+                );
+
+            return kafkaSettingsFactory;
+        }
+
+        private static IUnityContainer ConfigureStorage(this IUnityContainer container, Func<LifetimeManager> entryPointSpecificLifetimeManagerFactory)
         {
             // разрешаем update на таблицу состоящую только из Primary Keys
             LinqToDB.Common.Configuration.Linq.IgnoreEmptyUpdate = true;
@@ -304,6 +294,8 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                                     { Scope.Erm, Schema.Erm },
                                     { Scope.ValidationRules, new MappingSchema(Schema.Facts, Schema.Aggregates, Schema.Messages, Schema.Events) },
                                 };
+
+            var storageSettings = container.Resolve<ISqlStoreSettingsAspect>();
 
             return container
                 .RegisterType<IPendingChangesHandlingStrategy, NullPendingChangesHandlingStrategy>(Lifetime.Singleton)
@@ -370,7 +362,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                    .RegisterAccessor<ThemeCategory, ThemeCategoryAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterAccessor<ThemeOrganizationUnit, ThemeOrganizationUnitAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterAccessor<UnlimitedOrder, UnlimitedOrderAccessor>(entryPointSpecificLifetimeManagerFactory)
-                   
+
                    // TODO: все эти сущности обладают Id, поэтому вместо тупого delete all\insert all
                    // тут можно использовать интеллектуальный SyncDataObjectsActor, но проблема в том что нужен рефакторинг
                    // т.к. SyncDataObjectsActor не может работать с объектами, прилетевшими чисто по шине
