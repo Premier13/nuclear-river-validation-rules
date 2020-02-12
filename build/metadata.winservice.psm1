@@ -13,28 +13,14 @@ function Get-QuartzConfigMetadata ($Context){
 
 	switch ($Context.EnvType){
 		'Production' {
-			switch ($Context.Country){
-				'Russia' {
-					$quartzConfigs += @('kafka.quartz.Production.Russia.config')
-					$quartzConfigs += @('quartz.Production.Russia.config')
-					$quartzConfigs += @('quartz.Production.config')
-				}
-				default {
-					$quartzConfigs += @('quartz.Production.config')
-				}
-			}
+			$quartzConfigs += @('Production\kafka.quartz.Production.Russia.config')
+			$quartzConfigs += @('Production\quartz.Production.config')
+			$quartzConfigs += @('Production\quartz.Production.ErmFactsFlow.config')
 		}
 		default {
-			switch ($Context.Country){
-				'Russia' {
-					$quartzConfigs += @('Templates\kafka.quartz.Test.Russia.config')
-					$quartzConfigs += @('Templates\quartz.Test.Russia.config')
-					$quartzConfigs += @('Templates\quartz.Test.config')
-				}
-				default {
-					$quartzConfigs += @('Templates\quartz.Test.config')
-				}
-			}
+			$quartzConfigs += @('Default\kafka.quartz.Test.Russia.config')
+			$quartzConfigs += @('Default\quartz.Test.config')
+			$quartzConfigs += $Context.Tenants | ForEach-Object { "Default\quartz.Test.$_.config" }
 		}
 	}
 
@@ -60,14 +46,7 @@ function Get-TargetHostsMetadata ($Context){
 			return @{ 'TargetHosts' = @('uk-erm-iis10', 'uk-erm-iis11', 'uk-erm-iis12') }
 		}
 		'Test' {
-			switch ($Context.Country) {
-				'Russia' {
-					return @{ 'TargetHosts' = @('uk-erm-test03') }
-				}
-				default {
-					return @{ 'TargetHosts' = @('uk-erm-test02') }
-				}
-			}
+			return @{ 'TargetHosts' = @('uk-erm-test03') }
 		}
 		default {
 			$webMetadata = Get-WebMetadata $Context

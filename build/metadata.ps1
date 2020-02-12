@@ -38,10 +38,10 @@ function Get-EntryPointsMetadata ($EntryPoints, $Context) {
 	return $entryPointsMetadata
 }
 
-function Get-BulkToolMetadata ($updateSchemas, $tenants, $Context){
+function Get-BulkToolMetadata ($updateSchemas, $Context){
 	$metadata = @{}
 
-	$arguments = @("-tenants=$tenants")
+	$arguments = @("-tenants=$($Context.Tenants -join ',')")
 	if($updateSchemas -contains 'ErmFacts') {
 		$arguments += @('-erm-facts', '-aggregates', '-messages')
 	}
@@ -111,14 +111,14 @@ function Parse-EnvironmentMetadata ($Properties) {
 	$environmentMetadata += Get-MSBuildMetadata
 	$environmentMetadata += Get-NuGetMetadata
 
-	if ($Properties['EnvironmentType'] -and $Properties['BusinessModel']){
+	if ($Properties['EnvironmentType'] -and $Properties['Tenants']){
 		$context = @{
 			'EnvType' = $Properties.EnvironmentType
-			'Country' = $Properties.BusinessModel
+			'Tenants' = $Properties.Tenants.Split(',')
 		}
 
 		# Используется для именования AppPool сайтов
-		$context.EnvironmentName = "$($context.EnvType).$($context.Country)"
+		$context.EnvironmentName = "$($context.EnvType)"
 
 		if ($Properties['EnvironmentIndex']) {
 			$context.Index = $Properties.EnvironmentIndex
@@ -141,14 +141,13 @@ function Parse-EnvironmentMetadata ($Properties) {
 
 		if ($Properties['UpdateSchemas']){
 			$updateSchemas = $Properties.UpdateSchemas
-			$tenants = $Properties.Tenants
 
 			if ($updateSchemas -isnot [array]){
 				$updateSchemas = $updateSchemas.Split(@(','), [System.StringSplitOptions]::RemoveEmptyEntries)
 			}
 			$environmentMetadata += @{ 'UpdateSchemas' = $true }
 
-			$environmentMetadata += Get-BulkToolMetadata $updateSchemas $tenants $context
+			$environmentMetadata += Get-BulkToolMetadata $updateSchemas $context
 		}
 	}
 

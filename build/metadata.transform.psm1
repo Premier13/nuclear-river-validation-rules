@@ -29,14 +29,6 @@ $DBSuffixes = @{
 	'Azerbaijan' = 'AZ'
 }
 
-function Get-DbIndex($Context){
-	return $Context['Index']
-}
-
-function Get-DbCountry($Context){
-	return $DBSuffixes[$Context['Country']]
-}
-
 function Get-DbEnv($Context){
 	switch($Context.EnvType){
 		'Business' {
@@ -120,30 +112,7 @@ function Get-RulesetsFactsTopicsMetadata($Context){
 }
 
 function Get-XdtMetadata($Context){
-	$xdt = @('environments\Common\Erm.Release.config')
-
-	switch($Context.EnvType){
-		'Test' {
-			$xdt += @("environments\Templates\Erm.Test.config")
-		}
-		'Production' {
-			$xdt += @("environments\Erm.Production.config")
-		}
-		'Load' {
-			$xdt += @("environments\Erm.Load.config")
-		}
-		'Edu' {
-			$xdt += @("environments\Erm.Edu.config")
-		}
-		'Business' {
-			$xdt += @("environments\Erm.Business.config")
-		}
-		default {
-			throw "Environment type is not supported: {$(Context.EnvType)}"
-		}
-	}
-
-	return $xdt
+	return @('environments\Common\Erm.Release.config', "environments\Erm.$($Context.EnvType).config")
 }
 
 function Get-RegexMetadata($Context){
@@ -153,13 +122,8 @@ function Get-RegexMetadata($Context){
 	if ($Context['Index']){
 		$regex += @{ '{EnvNum}' = $Context['Index'] }
 	}
-	if ($Context['Country']){
-		$regex += @{ '{Country}' = $Context['Country'] }
-		$regex += @{ '{DbIndex}' = (Get-DbIndex $Context) }
-		$regex += @{ '{DbCountry}' = (Get-DbCountry $Context) }
-		$regex += @{ '{DbEnv}' = (Get-DbEnv $Context) }
-	}
 	if ($Context['EnvType']){
+		$regex += @{ '{DbEnv}' = (Get-DbEnv $Context) }
 		$regex += @{ '{EnvType}' = $Context['EnvType'] }
 	}
 

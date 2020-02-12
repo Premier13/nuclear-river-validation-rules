@@ -87,7 +87,7 @@ function Get-IisAppAliasesMetadata($Context) {
 function Get-WebsiteDomain($Context, $domain) {
 	switch ($Context.EnvType) {
 		'Production' {
-			return "validation.api.prod.erm.2gis.$mainDomain"
+			return "validation.api.prod.erm.2gis.$domain"
 		}
 		default {
 			$envIndex = $Context['Index']
@@ -98,10 +98,6 @@ function Get-WebsiteDomain($Context, $domain) {
 }
 
 function Get-IisMetadata ($Context) {
-	if($Context["Country"] -ne "Russia") {
-		throw "Web app deployment supported only with 'Russia' parameter"
-	}
-
 	$metadata = @{ }
 	$metadata += Get-IisAppPathMetadata $Context
 	$metadata += Get-IisAppPoolMetadata $Context

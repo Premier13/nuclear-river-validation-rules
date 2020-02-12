@@ -36,25 +36,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "environments", "environments", "{2BD0C7B2-8BF2-4867-AEA9-069B1587A45E}"
 	ProjectSection(SolutionItems) = preProject
 		environments\Erm.Load.config = environments\Erm.Load.config
-		environments\Erm.Production.config = environments\Erm.Production.config
-		environments\quartz.Production.config = environments\quartz.Production.config
-		environments\quartz.Production.Russia.config = environments\quartz.Production.Russia.config
-		environments\kafka.quartz.Production.Russia.config = environments\kafka.quartz.Production.Russia.config
 		environments\Erm.Business.config = environments\Erm.Business.config
 		environments\Erm.Edu.config = environments\Erm.Edu.config
+		environments\Erm.Test.config = environments\Erm.Test.config
+		environments\Erm.Production.config = environments\Erm.Production.config
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{286AF053-EC9B-4746-93B9-28A3DBB7C9F3}"
 	ProjectSection(SolutionItems) = preProject
 		environments\Common\Erm.Release.config = environments\Common\Erm.Release.config
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{20619483-64A9-4413-9167-E9436494D22E}"
-	ProjectSection(SolutionItems) = preProject
-		environments\Templates\Erm.Test.config = environments\Templates\Erm.Test.config
-		environments\Templates\quartz.Test.config = environments\Templates\quartz.Test.config
-		environments\Templates\quartz.Test.Russia.config = environments\Templates\quartz.Test.Russia.config
-		environments\Templates\kafka.quartz.Test.Russia.config = environments\Templates\kafka.quartz.Test.Russia.config
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Replication.Core", "src\Replication.Core\Replication.Core.csproj", "{D919999A-7708-4F55-9600-D34EBD4EC36C}"
@@ -66,6 +56,28 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StateInitialization.Core", "src\StateInitialization.Core\StateInitialization.Core.csproj", "{F01E5C87-97A4-4095-B552-05D9BD9762DA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Replication.Core.Tests", "test\Replication.Core.Tests\Replication.Core.Tests.csproj", "{DADB9A41-F41B-40CE-9D68-1BB19EC9523B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Production", "Production", "{307321E8-F4D6-44AB-8DEF-488BD321E198}"
+ProjectSection(SolutionItems) = preProject
+	environments\Production\kafka.quartz.Production.config = environments\Production\kafka.quartz.Production.config
+	environments\Production\quartz.Production.config = environments\Production\quartz.Production.config
+	environments\Production\quartz.Production.ErmFactsFlow.config = environments\Production\quartz.Production.ErmFactsFlow.config
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Default", "Default", "{1321EBFC-AFE6-40A7-8830-19DB087F15B9}"
+ProjectSection(SolutionItems) = preProject
+	environments\Default\kafka.quartz.Test.config = environments\Default\kafka.quartz.Test.config
+	environments\Default\quartz.Test.Azerbaijan.config = environments\Default\quartz.Test.Azerbaijan.config
+	environments\Default\quartz.Test.config = environments\Default\quartz.Test.config
+	environments\Default\quartz.Test.Cyprus.config = environments\Default\quartz.Test.Cyprus.config
+	environments\Default\quartz.Test.Czech.config = environments\Default\quartz.Test.Czech.config
+	environments\Default\quartz.Test.Emirates.config = environments\Default\quartz.Test.Emirates.config
+	environments\Default\quartz.Test.Kazakhstan.config = environments\Default\quartz.Test.Kazakhstan.config
+	environments\Default\quartz.Test.Kyrgyzstan.config = environments\Default\quartz.Test.Kyrgyzstan.config
+	environments\Default\quartz.Test.Russia.config = environments\Default\quartz.Test.Russia.config
+	environments\Default\quartz.Test.Ukraine.config = environments\Default\quartz.Test.Ukraine.config
+	environments\Default\quartz.Test.Uzbekistan.config = environments\Default\quartz.Test.Uzbekistan.config
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -155,10 +167,11 @@ Global
 		{70926221-57BA-4FBC-949F-2BFABA903480} = {D5758A2D-BB93-47E5-A13B-4EEC203D4371}
 		{3E0D8363-B4B7-475A-975E-6A2FDAB8831E} = {D5758A2D-BB93-47E5-A13B-4EEC203D4371}
 		{286AF053-EC9B-4746-93B9-28A3DBB7C9F3} = {2BD0C7B2-8BF2-4867-AEA9-069B1587A45E}
-		{20619483-64A9-4413-9167-E9436494D22E} = {2BD0C7B2-8BF2-4867-AEA9-069B1587A45E}
 		{D919999A-7708-4F55-9600-D34EBD4EC36C} = {CC56ADEE-00EC-45F4-9BA6-548BA40C45F0}
 		{365160E4-6FC5-4CD9-AAB6-9367BCCE0E15} = {CC56ADEE-00EC-45F4-9BA6-548BA40C45F0}
 		{DADB9A41-F41B-40CE-9D68-1BB19EC9523B} = {D5758A2D-BB93-47E5-A13B-4EEC203D4371}
+		{307321E8-F4D6-44AB-8DEF-488BD321E198} = {2BD0C7B2-8BF2-4867-AEA9-069B1587A45E}
+		{1321EBFC-AFE6-40A7-8830-19DB087F15B9} = {2BD0C7B2-8BF2-4867-AEA9-069B1587A45E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E2E29DCD-1A76-42B9-A70B-05333BA3C557}
