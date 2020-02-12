@@ -47,13 +47,24 @@ namespace NuClear.ValidationRules.Replication.Host.Jobs
             _serviceBusSettingsFactory = serviceBusSettingsFactory;
         }
 
+        public string Tenant { get; set; }
+
         protected override void ExecuteInternal(IJobExecutionContext context)
         {
-            WithinErrorLogging(ReportMemoryUsage);
-            WithinErrorLogging(ReportServiceBusQueueLength<ErmFactsFlow, PrimaryProcessingQueueLengthIdentity>);
-            WithinErrorLogging(ReportSqlQueueLength<AggregatesFlow, FinalProcessingAggregateQueueLengthIdentity>);
-            WithinErrorLogging(ReportSqlQueueLength<MessagesFlow, MessagesQueueLengthIdentity>);
-            WithinErrorLogging(ReportKafkaOffset<AmsFactsFlow, AmsFactsQueueLengthIdentity>);
+            // Костыль.
+            // Задача может запускаться без Tenant (для отправки общих метрик) или с ним - для отправки рамера очереди ServiceBus.
+            // Надеюсь, после объединения Erm кто-нибудь снова объединит эти задачи.
+            if (!string.IsNullOrWhiteSpace(Tenant))
+            {
+                WithinErrorLogging(ReportServiceBusQueueLength<ErmFactsFlow, PrimaryProcessingQueueLengthIdentity>);
+            }
+            else
+            {
+                WithinErrorLogging(ReportMemoryUsage);
+                WithinErrorLogging(ReportSqlQueueLength<AggregatesFlow, FinalProcessingAggregateQueueLengthIdentity>);
+                WithinErrorLogging(ReportSqlQueueLength<MessagesFlow, MessagesQueueLengthIdentity>);
+                WithinErrorLogging(ReportKafkaOffset<AmsFactsFlow, AmsFactsQueueLengthIdentity>);
+            }
         }
 
         private void WithinErrorLogging(Action action)

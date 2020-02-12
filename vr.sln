@@ -62,6 +62,7 @@ ProjectSection(SolutionItems) = preProject
 	environments\Production\kafka.quartz.Production.config = environments\Production\kafka.quartz.Production.config
 	environments\Production\quartz.Production.config = environments\Production\quartz.Production.config
 	environments\Production\quartz.Production.ErmFactsFlow.config = environments\Production\quartz.Production.ErmFactsFlow.config
+	environments\Production\quartz.Production.ReportingJob.config = environments\Production\quartz.Production.ReportingJob.config
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Default", "Default", "{1321EBFC-AFE6-40A7-8830-19DB087F15B9}"

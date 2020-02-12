@@ -16,6 +16,7 @@ function Get-QuartzConfigMetadata ($Context){
 			$quartzConfigs += @('Production\kafka.quartz.Production.config')
 			$quartzConfigs += @('Production\quartz.Production.config')
 			$quartzConfigs += @('Production\quartz.Production.ErmFactsFlow.config')
+			$quartzConfigs += @('Production\quartz.Production.ReportingJob.config')
 		}
 		default {
 			$quartzConfigs += @('Default\kafka.quartz.Test.config')
