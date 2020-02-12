@@ -111,10 +111,13 @@ function Parse-EnvironmentMetadata ($Properties) {
 	$environmentMetadata += Get-MSBuildMetadata
 	$environmentMetadata += Get-NuGetMetadata
 
-	if ($Properties['EnvironmentType'] -and $Properties['Tenants']){
+	if ($Properties['EnvironmentType']){
 		$context = @{
 			'EnvType' = $Properties.EnvironmentType
-			'Tenants' = $Properties.Tenants.Split(',')
+		}
+
+		if($Properties.Tenants) {
+			$context.Tenants = $Properties.Tenants.Split(',')
 		}
 
 		# Используется для именования AppPool сайтов

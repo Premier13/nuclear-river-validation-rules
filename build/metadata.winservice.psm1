@@ -13,12 +13,12 @@ function Get-QuartzConfigMetadata ($Context){
 
 	switch ($Context.EnvType){
 		'Production' {
-			$quartzConfigs += @('Production\kafka.quartz.Production.Russia.config')
+			$quartzConfigs += @('Production\kafka.quartz.Production.config')
 			$quartzConfigs += @('Production\quartz.Production.config')
 			$quartzConfigs += @('Production\quartz.Production.ErmFactsFlow.config')
 		}
 		default {
-			$quartzConfigs += @('Default\kafka.quartz.Test.Russia.config')
+			$quartzConfigs += @('Default\kafka.quartz.Test.config')
 			$quartzConfigs += @('Default\quartz.Test.config')
 			$quartzConfigs += $Context.Tenants | ForEach-Object { "Default\quartz.Test.$_.config" }
 		}
@@ -26,6 +26,7 @@ function Get-QuartzConfigMetadata ($Context){
 
 	return @{
 		'QuartzConfigs' =  $quartzConfigs
+		'AlterQuartzConfigs' = @()
 	}
 }
 
