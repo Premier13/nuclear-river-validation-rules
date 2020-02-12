@@ -345,3 +345,7 @@ MigrationBackup/
 
 # Rider
 .idea
+
+# Buildtools
+temp/
+temp_persist/
