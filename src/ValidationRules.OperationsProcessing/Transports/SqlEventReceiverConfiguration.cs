@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using NuClear.Messaging.API.Flows;
-using NuClear.ValidationRules.OperationsProcessing.Facts.AmsFactsFlow;
-using NuClear.ValidationRules.OperationsProcessing.Facts.ErmFactsFlow;
-using NuClear.ValidationRules.OperationsProcessing.Facts.RulesetFactsFlow;
+using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
+using NuClear.ValidationRules.OperationsProcessing.Facts.Erm;
 
 namespace NuClear.ValidationRules.OperationsProcessing.Transports
 {
     public sealed class SqlEventReceiverConfiguration
     {
         private static readonly IMessageFlow[] AggregatesFlowConsumeFlows =
-            {AmsFactsFlow.Instance, RulesetFactsFlow.Instance, ErmFactsFlow.Instance};
+            {ErmFactsFlow.Instance, KafkaFactsFlow.Instance,};
 
         private static readonly IMessageFlow[] MessagesFlowConsumeFlows =
             {AggregatesFlow.AggregatesFlow.Instance};

@@ -20,7 +20,13 @@ namespace NuClear.ValidationRules.Replication.Accessors.Rulesets
 
         public IReadOnlyCollection<Ruleset> GetDataObjects(IEnumerable<ICommand> commands)
         {
-            var dtos = commands.Cast<ReplaceDataObjectCommand>().SelectMany(x => x.Dtos).Cast<RulesetDto>();
+            var dtos = commands
+                .Cast<ReplaceDataObjectCommand>()
+                .SelectMany(x => x.Dtos)
+                .Cast<RulesetDto>()
+                .GroupBy(x => x.Id)
+                .Select(x => x.Aggregate((a,b) => a.Version > b.Version ? a : b));
+            
             var now = DateTime.UtcNow;
             return dtos.Select(x => new Ruleset
                 {

@@ -1,14 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Practices.Unity;
-using NuClear.Messaging.API.Flows;
 using NuClear.Model.Common.Entities;
 using NuClear.Replication.Core.Tenancy;
 using NuClear.River.Hosting.Common.Settings;
 using NuClear.Settings.API;
 using NuClear.Settings.Unity;
 using NuClear.ValidationRules.Hosting.Common;
-using NuClear.ValidationRules.Hosting.Common.Identities.Connections;
 using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
 using NuClear.ValidationRules.Querying.Host.Composition;
 using NuClear.ValidationRules.Querying.Host.DataAccess;
@@ -26,9 +24,6 @@ namespace NuClear.ValidationRules.Querying.Host.DI
         {
             var settings = new QueryingServiceSettings();
 
-            var environmentSettings = settings.AsSettings<IEnvironmentSettings>();
-            var connectionStringSettings = settings.AsSettings<IConnectionStringSettings>();
-
             return new UnityContainer()
                 .ConfigureSettingsAspects(settings)
                 .ConfigureTracing()
@@ -38,7 +33,7 @@ namespace NuClear.ValidationRules.Querying.Host.DI
                 .ConfigureSeverityProvider()
                 .ConfigureNameResolvingService()
                 .ConfigureSingleCheck()
-                .ConfigureOperationsProcessing(environmentSettings, connectionStringSettings);
+                .ConfigureOperationsProcessing();
         }
 
         private static IUnityContainer ConfigureDataAccess(this IUnityContainer container)
@@ -87,19 +82,10 @@ namespace NuClear.ValidationRules.Querying.Host.DI
             return container;
         }
 
-        private static IUnityContainer ConfigureOperationsProcessing(this IUnityContainer container,
-            IEnvironmentSettings environmentSettings,
-            IConnectionStringSettings connectionStringSettings)
+        private static IUnityContainer ConfigureOperationsProcessing(this IUnityContainer container)
         {
-            var kafkaSettingsFactory =
-                new KafkaSettingsFactory(new Dictionary<IMessageFlow, string>
-                    {
-                        [AliasForAmsFactsFlow.Instance] =
-                            connectionStringSettings.GetConnectionString(AmsConnectionStringIdentity.Instance)
-                    },
-                    environmentSettings);
-
-            return container.RegisterInstance<IKafkaSettingsFactory>(kafkaSettingsFactory)
+            return container
+                .RegisterType<IKafkaSettingsFactory, KafkaSettingsFactory>(new ContainerControlledLifetimeManager())
                 .RegisterType<KafkaMessageFlowInfoProvider>(new ContainerControlledLifetimeManager());
         }
     }

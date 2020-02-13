@@ -11,21 +11,19 @@ using NuClear.OperationsProcessing.API.Primary;
 namespace NuClear.OperationsProcessing.Transports.Kafka
 {
     // TODO: перенести в репозиторий operations
-    public sealed class KafkaMessage : MessageBase
+    public sealed class KafkaMessageBatch : MessageBase
     {
-        public KafkaMessage(ConsumeResult<Ignore, byte[]> result)
+        public KafkaMessageBatch(IReadOnlyCollection<ConsumeResult<Ignore, byte[]>> results)
         {
             Id = Guid.NewGuid();
-            Result = result;
+            Results = results;
         }
 
         public override Guid Id { get; }
-        public ConsumeResult<Ignore, byte[]> Result { get; }
-
-        public Message<Ignore, byte[]> Message => Result.Message;
+        public IReadOnlyCollection<ConsumeResult<Ignore, byte[]>> Results { get; }
     }
     
-    public sealed class KafkaReceiver : MessageReceiverBase<KafkaMessage, IPerformedOperationsReceiverSettings>
+    public sealed class KafkaReceiver : MessageReceiverBase<KafkaMessageBatch, IPerformedOperationsReceiverSettings>
     {
         private readonly IKafkaMessageFlowReceiver _messageFlowReceiver;
 
@@ -38,19 +36,20 @@ namespace NuClear.OperationsProcessing.Transports.Kafka
             _messageFlowReceiver = messageFlowReceiverFactory.Create(SourceFlowMetadata.MessageFlow);
         }
 
-        protected override IReadOnlyList<KafkaMessage> Peek()
+        protected override IReadOnlyList<KafkaMessageBatch> Peek()
         {
-            return _messageFlowReceiver.ReceiveBatch(MessageReceiverSettings.BatchSize).Select(x => new KafkaMessage(x)).ToList();
+            var batch = _messageFlowReceiver.ReceiveBatch(MessageReceiverSettings.BatchSize);
+            return new[] {new KafkaMessageBatch(batch)};
         }
 
-        protected override void Complete(IEnumerable<KafkaMessage> successfullyProcessedMessages, IEnumerable<KafkaMessage> failedProcessedMessages)
+        protected override void Complete(IEnumerable<KafkaMessageBatch> successfullyProcessedMessages, IEnumerable<KafkaMessageBatch> failedProcessedMessages)
         {
             if (failedProcessedMessages.Any())
             {
                 throw new ArgumentException("Kafka processing stopped, some messages cannot be processed");
             }
 
-            _messageFlowReceiver.CompleteBatch(successfullyProcessedMessages.Select(x => x.Result));
+            _messageFlowReceiver.CompleteBatch(successfullyProcessedMessages.SelectMany(x => x.Results));
         }
 
         protected override void OnDispose(bool disposing)

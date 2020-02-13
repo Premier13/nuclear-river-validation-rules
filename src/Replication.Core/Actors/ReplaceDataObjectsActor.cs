@@ -5,27 +5,23 @@ using System.Transactions;
 
 using NuClear.Replication.Core.Commands;
 using NuClear.Replication.Core.DataObjects;
-using NuClear.Storage.API.Readings;
 
 namespace NuClear.Replication.Core.Actors
 {
     public sealed class ReplaceDataObjectsActor<TDataObject> : IActor
         where TDataObject : class
     {
-        private readonly IQuery _query;
+        private readonly InMemoryEntityChangesProvider<TDataObject> _changesProvider;
         private readonly IBulkRepository<TDataObject> _bulkRepository;
-        private readonly IMemoryBasedDataObjectAccessor<TDataObject> _memoryBasedDataObjectAccessor;
         private readonly IDataChangesHandler<TDataObject> _dataChangesHandler;
 
         public ReplaceDataObjectsActor(
-            IQuery query,
+            InMemoryEntityChangesProvider<TDataObject> changesProvider,
             IBulkRepository<TDataObject> bulkRepository,
-            IMemoryBasedDataObjectAccessor<TDataObject> memoryBasedDataObjectAccessor,
             IDataChangesHandler<TDataObject> dataChangesHandler)
         {
-            _query = query;
+            _changesProvider = changesProvider;
             _bulkRepository = bulkRepository;
-            _memoryBasedDataObjectAccessor = memoryBasedDataObjectAccessor;
             _dataChangesHandler = dataChangesHandler;
         }
 
@@ -43,20 +39,31 @@ namespace NuClear.Replication.Core.Actors
             
             using var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted, Timeout = TimeSpan.Zero });
             
-            var findSpecification = _memoryBasedDataObjectAccessor.GetFindSpecification(commandsToExecute);
-            var existingDataObjects = _query.For(findSpecification).ToList();
-            if (existingDataObjects.Count != 0)
+            var changes = _changesProvider.GetChanges(commandsToExecute);
+
+            var toDelete = changes.Complement.ToArray();
+            if (toDelete.Length != 0)
             {
-                events.AddRange(_dataChangesHandler.HandleRelates(existingDataObjects));
-                _bulkRepository.Delete(existingDataObjects);
+                events.AddRange(_dataChangesHandler.HandleRelates(toDelete));
+                events.AddRange(_dataChangesHandler.HandleDeletes(toDelete));
+                _bulkRepository.Delete(toDelete);
             }
 
-            var targetDataObjects = _memoryBasedDataObjectAccessor.GetDataObjects(commandsToExecute);
-            if (targetDataObjects.Count != 0)
+            var toCreate = changes.Difference.ToArray();
+            if (toCreate.Length != 0)
             {
-                _bulkRepository.Create(targetDataObjects);
-                events.AddRange(_dataChangesHandler.HandleCreates(targetDataObjects));
-                events.AddRange(_dataChangesHandler.HandleRelates(targetDataObjects));
+                _bulkRepository.Create(toCreate);
+                events.AddRange(_dataChangesHandler.HandleCreates(toCreate));
+                events.AddRange(_dataChangesHandler.HandleRelates(toCreate));
+            }
+
+            var toUpdate = changes.Intersection.ToArray();
+            if (toUpdate.Length != 0)
+            {
+                events.AddRange(_dataChangesHandler.HandleRelates(toUpdate));
+                _bulkRepository.Update(toUpdate);
+                events.AddRange(_dataChangesHandler.HandleRelates(toUpdate));
+                events.AddRange(_dataChangesHandler.HandleUpdates(toUpdate));
             }
 
             transaction.Complete();

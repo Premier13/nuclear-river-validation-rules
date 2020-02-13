@@ -6,13 +6,13 @@ using NuClear.River.Hosting.Common.Identities.Connections;
 using NuClear.Settings;
 using NuClear.Settings.API;
 using NuClear.Storage.API.ConnectionStrings;
-using NuClear.ValidationRules.OperationsProcessing.Facts.ErmFactsFlow;
+using NuClear.ValidationRules.OperationsProcessing.Facts.Erm;
 
 namespace NuClear.ValidationRules.Replication.Host.Factories
 {
     public sealed class ServiceBusSettingsFactory : IServiceBusSettingsFactory
     {
-        private static readonly StringSetting _ermOperationsFlowTopic = ConfigFileSetting.String.Optional("ErmEventsFlowTopic", "topic.performedoperations");
+        private static readonly StringSetting ErmFactsTopic = ConfigFileSetting.String.Required("ErmFactsTopic");
 
         private readonly IConnectionStringSettings _connectionStringSettings;
 
@@ -27,7 +27,7 @@ namespace NuClear.ValidationRules.Replication.Host.Factories
                 return new Settings
                 {
                     ConnectionString = ServiceBusConnectionString,
-                    TransportEntityPath = _ermOperationsFlowTopic.Value,
+                    TransportEntityPath = ErmFactsTopic.Value,
                 };
 
             throw new ArgumentException($"Flow '{messageFlow.Description}' settings for MS ServiceBus are undefined");

@@ -78,8 +78,6 @@
     <Compile Include="Composition\FirmRules\PartnerAdvertisementMustNotCauseProblemsToTheAdvertiserMessageComposer.cs" />
     <Compile Include="Composition\PriceRules\PoiAmountForEntranceShouldMeetMaximumRestrictionsComposer.cs" />
     <Compile Include="Composition\IMessageSeverityProvider.cs" />
-    <Compile Include="DataAccess\AliasForAmsFactsFlow.cs" />
-    <Compile Include="DI\Bootstrapper.ConfigureTracing.cs" />
     <Compile Include="QueryingServiceSettings.cs" />
     <Compile Include="Composition\PriceRules\AdvertisementAmountShouldMeetMaximumRestrictionsMessageComposer.cs" />
     <Compile Include="Composition\SystemRules\AmsMessagesShouldBeNewMessageComposer.cs" />
@@ -114,6 +112,7 @@
     <Compile Include="DataAccess\ValidationResultRepositiory.cs" />
     <Compile Include="DataAccess\VersioningService.cs" />
     <Compile Include="DI\Bootstrapper.cs" />
+    <Compile Include="DI\Bootstrapper.ConfigureTracing.cs" />
     <Compile Include="DI\UnityDependencyResolver.cs" />
     <Compile Include="ExceptionTracer.cs" />
     <Compile Include="Global.asax.cs">
@@ -231,7 +230,7 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="AfterBuild">
   </Target>

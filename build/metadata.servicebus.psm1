@@ -38,7 +38,7 @@ function Get-TopicsMetadata ($Context) {
 			$metadata = @{
 				'CreateTopics' = @{
 
-					'ErmEventsFlowTopic' = @{
+					'ErmFactsTopic' = @{
 						'Name' = 'topic.performedoperations'
 						'ConnectionStringNameProvider' = {param($tenant) "ServiceBus.$tenant" }
 					} + $topicProperties

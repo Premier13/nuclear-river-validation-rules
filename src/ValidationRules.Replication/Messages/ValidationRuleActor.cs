@@ -221,7 +221,7 @@ namespace NuClear.ValidationRules.Replication.Messages
 
             if (amsStates.Count != 0)
             {
-                var maxAmsState = amsStates.OrderByDescending(x => x.Offset).First();
+                var maxAmsState = amsStates.Aggregate((a, b) => a.Offset > b.Offset ? a : b);
                 _amsStatesRepository.Add(new Version.AmsState { VersionId = id, Offset = maxAmsState.Offset, UtcDateTime = maxAmsState.UtcDateTime });
                 _amsStatesRepository.Save();
             }
@@ -240,7 +240,7 @@ namespace NuClear.ValidationRules.Replication.Messages
 
             if (amsStates.Count != 0)
             {
-                var maxAmsState = amsStates.OrderByDescending(x => x.Offset).First();
+                var maxAmsState = amsStates.Aggregate((a, b) => a.Offset > b.Offset ? a : b);
                 _amsStatesRepository.Add(new Version.AmsState { VersionId = id, Offset = maxAmsState.Offset, UtcDateTime = maxAmsState.UtcDateTime });
                 _amsStatesRepository.Save();
             }

@@ -69,11 +69,8 @@ namespace NuClear.ValidationRules.Hosting.Common.Settings
                 case ValidationRulesConnectionStringIdentity _:
                     return ConfigurationManager.ConnectionStrings["ValidationRules"].ConnectionString;
 
-                case AmsConnectionStringIdentity _:
-                    return ConfigurationManager.ConnectionStrings["Ams"].ConnectionString;
-
-                case RulesetConnectionStringIdentity _:
-                    return ConfigurationManager.ConnectionStrings["Rulesets"].ConnectionString;
+                case KafkaConnectionStringIdentity _:
+                    return ConfigurationManager.ConnectionStrings["Kafka"].ConnectionString;
 
                 case LoggingConnectionStringIdentity _:
                     return ConfigurationManager.ConnectionStrings["Logging"].ConnectionString;

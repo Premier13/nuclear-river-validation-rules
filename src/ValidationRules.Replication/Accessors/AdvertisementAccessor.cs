@@ -21,7 +21,12 @@ namespace NuClear.ValidationRules.Replication.Accessors
 
         public IReadOnlyCollection<Advertisement> GetDataObjects(IEnumerable<ICommand> commands)
         {
-            var dtos = commands.Cast<ReplaceDataObjectCommand>().SelectMany(x => x.Dtos).Cast<AdvertisementDto>();
+            var dtos = commands
+                .Cast<ReplaceDataObjectCommand>()
+                .SelectMany(x => x.Dtos)
+                .Cast<AdvertisementDto>()
+                .GroupBy(x => x.Id)
+                .Select(x => x.Aggregate((a,b) => a.Offset > b.Offset ? a : b));
 
             // @m.pashuk: не совсем уверен, но ведь эту проблему уже кто-то когда-то где-то должен был решить?
             // в пакете может несколько раз втречаться один и тот-же РМ.
@@ -58,7 +63,7 @@ namespace NuClear.ValidationRules.Replication.Accessors
         }
 
         public IReadOnlyCollection<IEvent> HandleCreates(IReadOnlyCollection<Advertisement> dataObjects) => Array.Empty<IEvent>();
-        public IReadOnlyCollection<IEvent> HandleUpdates(IReadOnlyCollection<Advertisement> dataObjects) => throw new NotSupportedException();
-        public IReadOnlyCollection<IEvent> HandleDeletes(IReadOnlyCollection<Advertisement> dataObjects) => throw new NotSupportedException();
+        public IReadOnlyCollection<IEvent> HandleUpdates(IReadOnlyCollection<Advertisement> dataObjects) => Array.Empty<IEvent>();
+        public IReadOnlyCollection<IEvent> HandleDeletes(IReadOnlyCollection<Advertisement> dataObjects) => Array.Empty<IEvent>();
     }
 }

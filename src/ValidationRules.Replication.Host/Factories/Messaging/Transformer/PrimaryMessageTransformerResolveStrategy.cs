@@ -6,7 +6,7 @@ using NuClear.Messaging.API.Processing.Actors.Transformers;
 using NuClear.Messaging.DI.Factories.Unity.Transformers.Resolvers;
 using NuClear.OperationsProcessing.Transports.ServiceBus.Primary;
 using NuClear.ValidationRules.OperationsProcessing.AggregatesFlow;
-using NuClear.ValidationRules.OperationsProcessing.Facts.ErmFactsFlow;
+using NuClear.ValidationRules.OperationsProcessing.Facts.Erm;
 using NuClear.ValidationRules.OperationsProcessing.MessagesFlow;
 
 namespace NuClear.ValidationRules.Replication.Host.Factories.Messaging.Transformer

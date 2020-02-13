@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Confluent.Kafka;
-using NuClear.Messaging.API.Flows;
 using NuClear.Replication.Core;
+using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
 using NuClear.ValidationRules.OperationsProcessing;
-using NuClear.ValidationRules.OperationsProcessing.Facts.AmsFactsFlow;
+using NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams;
 using NuClear.ValidationRules.Replication.Dto;
 
 namespace NuClear.ValidationRules.StateInitialization.Host.Kafka.Ams
@@ -13,32 +13,26 @@ namespace NuClear.ValidationRules.StateInitialization.Host.Kafka.Ams
     public sealed class AmsFactsBulkCommandFactory : IBulkCommandFactory<ConsumeResult<Ignore, byte[]>>
     {
         private readonly IDeserializer<ConsumeResult<Ignore, byte[]>, AdvertisementDto> _deserializer;
-
-        public AmsFactsBulkCommandFactory()
+        private readonly IEnumerable<string> _appropriateTopics;
+        
+        public AmsFactsBulkCommandFactory(IKafkaSettingsFactory kafkaSettingsFactory)
         {
+            _appropriateTopics = kafkaSettingsFactory.CreateReceiverSettings(AmsFactsFlow.Instance).Topics;
             _deserializer = new AdvertisementDtoDeserializer();
-            AppropriateFlows = new[] { AmsFactsFlow.Instance };
         }
-
-        public IReadOnlyCollection<IMessageFlow> AppropriateFlows { get; }
-
-        public IReadOnlyCollection<ICommand> CreateCommands(IReadOnlyCollection<ConsumeResult<Ignore, byte[]>> results)
+        
+        public IReadOnlyCollection<ICommand> CreateCommands(IReadOnlyCollection<ConsumeResult<Ignore, byte[]>> messages)
         {
-            var deserializedDtos = _deserializer.Deserialize(results)
-                                           .Aggregate(new Dictionary<long, AdvertisementDto>(results.Count),
-                                                      (dict, dto) =>
-                                                          {
-                                                              dict[dto.Id] = dto;
-                                                              return dict;
-                                                          });
-
+            var filtered = messages.Where(x => _appropriateTopics.Contains(x.Topic));
+            
+            var deserializedDtos = _deserializer.Deserialize(filtered).ToList();
             if (deserializedDtos.Count == 0)
             {
                 return Array.Empty<ICommand>();
             }
 
             return DataObjectTypesProvider.AmsFactTypes
-                                                 .Select(factType => new BulkInsertInMemoryDataObjectsCommand(factType, deserializedDtos.Values))
+                                                 .Select(factType => new BulkInsertInMemoryDataObjectsCommand(factType, deserializedDtos))
                                                  .ToList();
         }
     }

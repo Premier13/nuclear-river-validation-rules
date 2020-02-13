@@ -6,9 +6,7 @@ using System.Xml.Linq;
 using Confluent.Kafka;
 using NuClear.ValidationRules.Replication.Dto;
 
-using Optional;
-
-namespace NuClear.ValidationRules.OperationsProcessing.Facts.RulesetFactsFlow
+namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
 {
     public sealed class RulesetDtoDeserializer : IDeserializer<ConsumeResult<Ignore, byte[]>, RulesetDto>
     {

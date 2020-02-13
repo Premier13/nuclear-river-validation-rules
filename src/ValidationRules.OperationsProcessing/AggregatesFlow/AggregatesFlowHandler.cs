@@ -86,7 +86,7 @@ namespace NuClear.ValidationRules.OperationsProcessing.AggregatesFlow
                 return Enumerable.Empty<IEvent>();
             }
 
-            var maxAmsState = commands.Select(x => x.State).OrderByDescending(x => x.Offset).First();
+            var maxAmsState = commands.Aggregate((a, b) => a.State.Offset > b.State.Offset ? a : b).State;
             return new IEvent[] { new AmsStateIncrementedEvent(maxAmsState) };
         }
 
