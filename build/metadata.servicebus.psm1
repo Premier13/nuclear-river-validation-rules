@@ -49,7 +49,7 @@ function Get-TopicsMetadata ($Context) {
 
 					'ErmEventsFlowSubscription' = @{
 						'TopicName' = 'topic.performedoperations'
-						'Name' = '6A75B8B4-74A6-4523-9388-84E4DFFD5B06'
+						'Name' = '213A17BF-2945-4F98-B02F-62235C0A107E'
 						'ConnectionStringNameProvider' = {param($tenant) "ServiceBus.$tenant" }
 					} + $subscriptionProperties
 

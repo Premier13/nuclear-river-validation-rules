@@ -6,7 +6,7 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.ErmFactsFlow
 {
     public sealed class ErmFactsFlow : MessageFlowBase<ErmFactsFlow>
     {
-        public override Guid Id => new Guid("6A75B8B4-74A6-4523-9388-84E4DFFD5B06");
+        public override Guid Id => new Guid("213A17BF-2945-4F98-B02F-62235C0A107E");
 
         public override string Description => nameof(ErmFactsFlow);
     }
