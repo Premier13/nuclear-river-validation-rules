@@ -1,24 +1,20 @@
 ﻿using System;
-using System.Configuration;
 using NuClear.Messaging.API.Flows;
 using NuClear.Messaging.Transports.ServiceBus.API;
-using NuClear.Replication.Core.Tenancy;
 using NuClear.Replication.OperationsProcessing.Transports.ServiceBus.Factories;
 using NuClear.River.Hosting.Common.Identities.Connections;
 using NuClear.Settings;
 using NuClear.Settings.API;
 using NuClear.Storage.API.ConnectionStrings;
-using NuClear.ValidationRules.OperationsProcessing.AggregatesFlow;
 using NuClear.ValidationRules.OperationsProcessing.Facts.ErmFactsFlow;
-using NuClear.ValidationRules.OperationsProcessing.MessagesFlow;
 
 namespace NuClear.ValidationRules.Replication.Host.Factories
 {
     public sealed class ServiceBusSettingsFactory : IServiceBusSettingsFactory
     {
-        private readonly IConnectionStringSettings _connectionStringSettings;
+        private static readonly StringSetting _ermOperationsFlowTopic = ConfigFileSetting.String.Optional("ErmEventsFlowTopic", "topic.performedoperations");
 
-        private readonly StringSetting _ermOperationsFlowTopic = ConfigFileSetting.String.Optional("ErmEventsFlowTopic", "topic.performedoperations");
+        private readonly IConnectionStringSettings _connectionStringSettings;
 
         public ServiceBusSettingsFactory(IConnectionStringSettings connectionStringSettings)
         {

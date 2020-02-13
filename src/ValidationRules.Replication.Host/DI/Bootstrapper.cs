@@ -242,7 +242,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             return container.RegisterInstance<IParentContainerUsedRegistrationsContainer>(new ParentContainerUsedRegistrationsContainer(), Lifetime.Singleton)
                             .RegisterType(typeof(ServiceBusMessageFlowReceiver), Lifetime.Singleton)
                             .RegisterType<IServiceBusLockRenewer, NullServiceBusLockRenewer>(Lifetime.Singleton)
-                            .RegisterType<IServiceBusSettingsFactory, ServiceBusSettingsFactory>(Lifetime.Singleton)
+                            .RegisterType<IServiceBusSettingsFactory, ServiceBusSettingsFactory>(Lifetime.PerScope)
                             .RegisterType<IServiceBusMessageFlowReceiverFactory, ServiceBusMessageFlowReceiverFactory>(Lifetime.PerScope)
                             .RegisterType<IMessageProcessingStagesFactory, UnityMessageProcessingStagesFactory>(Lifetime.PerScope)
                             .RegisterType<IMessageFlowProcessorFactory, UnityMessageFlowProcessorFactory>(Lifetime.PerScope)
