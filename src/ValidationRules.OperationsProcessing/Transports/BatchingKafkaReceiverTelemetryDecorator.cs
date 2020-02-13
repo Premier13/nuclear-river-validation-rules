@@ -8,16 +8,13 @@ using NuClear.Telemetry.Probing;
 
 namespace NuClear.ValidationRules.OperationsProcessing.Transports
 {
-    public sealed class BatchingKafkaReceiverTelemetryDecorator<TReceiverActionReporter> : IMessageReceiver
-        where TReceiverActionReporter : IFlowTelemetryPublisher
+    public sealed class BatchingKafkaReceiverTelemetryDecorator : IMessageReceiver
     {
         private readonly IMessageReceiver _receiver;
-        private readonly IFlowTelemetryPublisher _publisher;
 
-        public BatchingKafkaReceiverTelemetryDecorator(KafkaReceiver receiver, TReceiverActionReporter publisher)
+        public BatchingKafkaReceiverTelemetryDecorator(KafkaReceiver receiver)
         {
             _receiver = receiver;
-            _publisher = publisher;
         }
 
         public IReadOnlyList<IMessage> Peek()
@@ -25,7 +22,6 @@ namespace NuClear.ValidationRules.OperationsProcessing.Transports
             using (Probe.Create("Peek messages from Kafka"))
             {
                 var messages = _receiver.Peek();
-                _publisher.Peeked(messages.Count);
                 return messages;
             }
         }
@@ -34,13 +30,10 @@ namespace NuClear.ValidationRules.OperationsProcessing.Transports
         {
             using (Probe.Create("Complete Kafka messages"))
             {
-                var succeeded = successfullyProcessedMessages.Cast<KafkaMessage>().ToList();
-                var failed = failedProcessedMessages.Cast<KafkaMessage>().ToList();
+                var succeeded = successfullyProcessedMessages.Cast<KafkaMessageBatch>().ToList();
+                var failed = failedProcessedMessages.Cast<KafkaMessageBatch>().ToList();
 
                 _receiver.Complete(succeeded, failed);
-
-                _publisher.Completed(succeeded.Count);
-                _publisher.Failed(failed.Count);
             }
         }
     }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NuClear.Replication.Core;
-using NuClear.ValidationRules.Replication;
 using NuClear.ValidationRules.Replication.Events;
 
 namespace NuClear.ValidationRules.OperationsProcessing.Facts

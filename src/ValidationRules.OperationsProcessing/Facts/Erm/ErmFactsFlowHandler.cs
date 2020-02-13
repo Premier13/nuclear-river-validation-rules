@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Transactions;
-
 using NuClear.Messaging.API.Processing;
 using NuClear.Messaging.API.Processing.Actors.Handlers;
 using NuClear.Messaging.API.Processing.Stages;
@@ -16,7 +15,7 @@ using NuClear.ValidationRules.Replication;
 using NuClear.ValidationRules.Replication.Commands;
 using NuClear.ValidationRules.Replication.Events;
 
-namespace NuClear.ValidationRules.OperationsProcessing.Facts.ErmFactsFlow
+namespace NuClear.ValidationRules.OperationsProcessing.Facts.Erm
 {
     public sealed class ErmFactsFlowHandler : IMessageProcessingHandler
     {

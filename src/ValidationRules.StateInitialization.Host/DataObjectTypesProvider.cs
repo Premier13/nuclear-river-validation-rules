@@ -165,10 +165,13 @@ namespace NuClear.ValidationRules.StateInitialization.Host
                 typeof(Messages::Version.ErmState),
             };
 
-        public static IReadOnlyCollection<Type> AllFactTypes =
-            ErmFactTypes.Concat(AmsFactTypes).Concat(RulesetFactTypes).Distinct().ToList();
+        public static readonly IReadOnlyCollection<Type> KafkaFactTypes =
+            AmsFactTypes.Concat(RulesetFactTypes).ToHashSet();
+
+        public static readonly IReadOnlyCollection<Type> AllFactTypes =
+            ErmFactTypes.Concat(KafkaFactTypes).ToHashSet();
 
         public static readonly IReadOnlyCollection<Type> AllMessagesTypes =
-            MessagesTypes.Concat(ErmMessagesTypes).Distinct().ToList();
+            MessagesTypes.Concat(ErmMessagesTypes).ToHashSet();
     }
 }

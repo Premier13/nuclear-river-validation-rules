@@ -47,7 +47,7 @@ namespace NuClear.ValidationRules.Replication
             where TAccessor : IStorageBasedDataObjectAccessor<TEntity>, IDataChangesHandler<TEntity>
             where TEntity : class
         {
-            return new ValueObjectActor<TEntity>(new ValueObjectChangesProvider<TEntity>(_query, accessor, _equalityComparerFactory), repository, accessor);
+            return new ValueObjectActor<TEntity>(new EntityChangesProvider<TEntity>(_query, accessor, _equalityComparerFactory), repository, accessor);
         }
 
         private sealed class EntityActor<TEntity> : EntityActorBase<TEntity> where TEntity : class

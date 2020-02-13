@@ -26,7 +26,7 @@ namespace NuClear.ValidationRules.Replication.Accessors
                 .SelectMany(x => x.Dtos)
                 .Cast<AdvertisementDto>()
                 .GroupBy(x => x.Id)
-                .Select(x => x.OrderByDescending(y => y.Offset).First());
+                .Select(x => x.Aggregate((a,b) => a.Offset > b.Offset ? a : b));
 
             return dtos.Select(x => new Advertisement
             {
@@ -58,7 +58,7 @@ namespace NuClear.ValidationRules.Replication.Accessors
         }
 
         public IReadOnlyCollection<IEvent> HandleCreates(IReadOnlyCollection<Advertisement> dataObjects) => Array.Empty<IEvent>();
-        public IReadOnlyCollection<IEvent> HandleUpdates(IReadOnlyCollection<Advertisement> dataObjects) => throw new NotSupportedException();
-        public IReadOnlyCollection<IEvent> HandleDeletes(IReadOnlyCollection<Advertisement> dataObjects) => throw new NotSupportedException();
+        public IReadOnlyCollection<IEvent> HandleUpdates(IReadOnlyCollection<Advertisement> dataObjects) => Array.Empty<IEvent>();
+        public IReadOnlyCollection<IEvent> HandleDeletes(IReadOnlyCollection<Advertisement> dataObjects) => Array.Empty<IEvent>();
     }
 }

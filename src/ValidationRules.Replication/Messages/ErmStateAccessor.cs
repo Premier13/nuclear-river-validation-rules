@@ -23,7 +23,7 @@ namespace NuClear.ValidationRules.Replication.Messages
 
         public IReadOnlyCollection<IEvent> HandleRelates(IReadOnlyCollection<Version.ErmState> dataObjects) => Array.Empty<IEvent>();
         public IReadOnlyCollection<IEvent> HandleCreates(IReadOnlyCollection<Version.ErmState> dataObjects) => Array.Empty<IEvent>();
-        public IReadOnlyCollection<IEvent> HandleUpdates(IReadOnlyCollection<Version.ErmState> dataObjects) => throw new NotSupportedException();
-        public IReadOnlyCollection<IEvent> HandleDeletes(IReadOnlyCollection<Version.ErmState> dataObjects) => throw new NotSupportedException();
+        public IReadOnlyCollection<IEvent> HandleUpdates(IReadOnlyCollection<Version.ErmState> dataObjects) => Array.Empty<IEvent>();
+        public IReadOnlyCollection<IEvent> HandleDeletes(IReadOnlyCollection<Version.ErmState> dataObjects) => Array.Empty<IEvent>();
     }
 }

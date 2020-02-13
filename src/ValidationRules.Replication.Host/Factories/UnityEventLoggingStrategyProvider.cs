@@ -9,11 +9,10 @@ using NuClear.Messaging.Transports.ServiceBus.API;
 using NuClear.OperationsLogging.API;
 using NuClear.OperationsLogging.Transports.ServiceBus;
 using NuClear.Replication.OperationsProcessing.Transports.ServiceBus.Factories;
+using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
 using NuClear.ValidationRules.OperationsProcessing;
 using NuClear.ValidationRules.OperationsProcessing.AggregatesFlow;
-using NuClear.ValidationRules.OperationsProcessing.Facts.AmsFactsFlow;
-using NuClear.ValidationRules.OperationsProcessing.Facts.ErmFactsFlow;
-using NuClear.ValidationRules.OperationsProcessing.Facts.RulesetFactsFlow;
+using NuClear.ValidationRules.OperationsProcessing.Facts.Erm;
 using NuClear.ValidationRules.OperationsProcessing.MessagesFlow;
 
 namespace NuClear.ValidationRules.Replication.Host.Factories
@@ -38,8 +37,7 @@ namespace NuClear.ValidationRules.Replication.Host.Factories
             var vrFactsFlows = new IEquatable<IMessageFlow>[]
                 {
                     ErmFactsFlow.Instance,
-                    AmsFactsFlow.Instance,
-                    RulesetFactsFlow.Instance
+                    KafkaFactsFlow.Instance
                 };
 
             if (vrFactsFlows.Contains(messageFlow))

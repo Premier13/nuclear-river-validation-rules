@@ -21,8 +21,7 @@ namespace NuClear.ValidationRules.Replication
     {
         private readonly IQuery _query;
         private readonly IBulkRepository<EntityName> _bulkRepository;
-        private readonly IEqualityComparer<EntityName> _identityComparer;
-        private readonly IEqualityComparer<EntityName> _completeComparer;
+        private readonly TwoPhaseDataChangesDetector<EntityName> _dataChangesDetector;
 
         public SyncEntityNameActor(IQuery query,
                                    IBulkRepository<EntityName> bulkRepository,
@@ -30,8 +29,7 @@ namespace NuClear.ValidationRules.Replication
         {
             _query = query;
             _bulkRepository = bulkRepository;
-            _identityComparer = equalityComparerFactory.CreateIdentityComparer<EntityName>();
-            _completeComparer = equalityComparerFactory.CreateCompleteComparer<EntityName>();
+            _dataChangesDetector = new TwoPhaseDataChangesDetector<EntityName>(equalityComparerFactory);
         }
 
         public IReadOnlyCollection<IEvent> ExecuteCommands(IReadOnlyCollection<ICommand> commands)
@@ -44,13 +42,10 @@ namespace NuClear.ValidationRules.Replication
                 {
                     var specification = accessor.GetFindSpecification(syncDataObjectCommands);
 
-                    var dataChangesDetector = new TwoPhaseDataChangesDetector<EntityName>(
-                        spec => accessor.GetSource().WhereMatched(spec),
-                        spec => _query.For<EntityName>().WhereMatched(spec),
-                        _identityComparer,
-                        _completeComparer);
-
-                    var changes = dataChangesDetector.DetectChanges(specification);
+                    var source = new TransactionDecorator<EntityName>(accessor.GetSource().WhereMatched(specification));
+                    var target = _query.For<EntityName>().WhereMatched(specification);
+                    var changes = _dataChangesDetector.DetectChanges(source, target);
+                    
                     _bulkRepository.Delete(changes.Complement);
                     _bulkRepository.Create(changes.Difference);
                     _bulkRepository.Update(changes.Intersection);
@@ -65,13 +60,10 @@ namespace NuClear.ValidationRules.Replication
                 {
                     var specification = accessor.GetFindSpecification(replaceDataObjectCommands);
 
-                    var dataChangesDetector = new TwoPhaseDataChangesDetector<EntityName>(
-                        _ => accessor.GetDataObjects(replaceDataObjectCommands),
-                        spec => _query.For<EntityName>().WhereMatched(spec),
-                        _identityComparer,
-                        _completeComparer);
+                    var source = accessor.GetDataObjects(replaceDataObjectCommands);
+                    var target = _query.For<EntityName>().WhereMatched(specification);
 
-                    var changes = dataChangesDetector.DetectChanges(specification);
+                    var changes = _dataChangesDetector.DetectChanges(source, target);
                     _bulkRepository.Delete(changes.Complement);
                     _bulkRepository.Create(changes.Difference);
                     _bulkRepository.Update(changes.Intersection);
@@ -304,7 +296,12 @@ namespace NuClear.ValidationRules.Replication
 
             public IReadOnlyCollection<EntityName> GetDataObjects(IEnumerable<ICommand> commands)
             {
-                var dtos = commands.Cast<ReplaceDataObjectCommand>().SelectMany(x => x.Dtos).Cast<AdvertisementDto>();
+                var dtos = commands
+                    .Cast<ReplaceDataObjectCommand>()
+                    .SelectMany(x => x.Dtos)
+                    .Cast<AdvertisementDto>()
+                    .GroupBy(x => x.Id)
+                    .Select(x => x.Aggregate((a,b) => a.Offset > b.Offset ? a : b));
 
                 return dtos.Select(x => new EntityName
                 {

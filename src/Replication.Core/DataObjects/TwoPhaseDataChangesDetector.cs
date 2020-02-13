@@ -1,28 +1,27 @@
 ﻿using System.Collections.Generic;
-
-using NuClear.Storage.API.Specifications;
+using NuClear.Replication.Core.Equality;
 
 namespace NuClear.Replication.Core.DataObjects
 {
-    public class TwoPhaseDataChangesDetector<T>
+    public class TwoPhaseDataChangesDetector<TDataObject>
     {
-        private readonly DataChangesDetector<T> _dataChangesDetector;
-        private readonly IEqualityComparer<T> _identityComparer;
+        private readonly IEqualityComparer<TDataObject> _identityComparer;
+        private readonly IEqualityComparer<TDataObject> _completeComparer;
 
-        public TwoPhaseDataChangesDetector(
-            MapToObjectsSpecProvider<T, T> sourceProvider,
-            MapToObjectsSpecProvider<T, T> targetProvider,
-            IEqualityComparer<T> identityComparer,
-            IEqualityComparer<T> completeComparer)
+        public TwoPhaseDataChangesDetector(IEqualityComparerFactory equalityComparerFactory)
         {
-            _dataChangesDetector = new DataChangesDetector<T>(sourceProvider, targetProvider, completeComparer);
-            _identityComparer = identityComparer;
+            _identityComparer = equalityComparerFactory.CreateIdentityComparer<TDataObject>();
+            _completeComparer = equalityComparerFactory.CreateCompleteComparer<TDataObject>();
         }
 
-        public MergeResult<T> DetectChanges(FindSpecification<T> specification)
+        public MergeResult<TDataObject> DetectChanges(IEnumerable<TDataObject> source, IEnumerable<TDataObject> target)
         {
-            var preresult = _dataChangesDetector.DetectChanges(specification);
-            return MergeTool.Merge(preresult.Difference, preresult.Complement, _identityComparer);
+            var preResult = MergeTool.Merge(source, target, _completeComparer);
+            
+            // вторая фаза поможет найти объекты разные внутри но одинаковые по первичному ключу
+            // таким образом мы нормально построим sql-инструкцию UPDATE 
+            var result = MergeTool.Merge(preResult.Difference, preResult.Complement, _identityComparer);
+            return result;
         }
     }
 }

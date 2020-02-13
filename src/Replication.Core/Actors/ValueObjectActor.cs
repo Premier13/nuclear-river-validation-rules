@@ -12,7 +12,7 @@ namespace NuClear.Replication.Core.Actors
 {
     public sealed class ValueObjectActor<TDataObject> : IActor where TDataObject : class
     {
-        private readonly ValueObjectChangesProvider<TDataObject> _changesProvider;
+        private readonly EntityChangesProvider<TDataObject> _changesProvider;
         private readonly IBulkRepository<TDataObject> _bulkRepository;
         private readonly IDataChangesHandler<TDataObject> _dataChangesHandler;
 
@@ -21,16 +21,16 @@ namespace NuClear.Replication.Core.Actors
             IBulkRepository<TDataObject> bulkRepository,
             IEqualityComparerFactory equalityComparerFactory,
             IStorageBasedDataObjectAccessor<TDataObject> storageBasedDataObjectAccessor)
-            : this(new ValueObjectChangesProvider<TDataObject>(query, storageBasedDataObjectAccessor, equalityComparerFactory), bulkRepository, new NullDataChangesHandler<TDataObject>())
+            : this(new EntityChangesProvider<TDataObject>(query, storageBasedDataObjectAccessor, equalityComparerFactory), bulkRepository, new NullDataChangesHandler<TDataObject>())
         {
         }
 
-        public ValueObjectActor(ValueObjectChangesProvider<TDataObject> changesProvider, IBulkRepository<TDataObject> bulkRepository)
+        public ValueObjectActor(EntityChangesProvider<TDataObject> changesProvider, IBulkRepository<TDataObject> bulkRepository)
             : this(changesProvider, bulkRepository, new NullDataChangesHandler<TDataObject>())
         {
         }
 
-        public ValueObjectActor(ValueObjectChangesProvider<TDataObject> changesProvider, IBulkRepository<TDataObject> bulkRepository, IDataChangesHandler<TDataObject> dataChangesHandler)
+        public ValueObjectActor(EntityChangesProvider<TDataObject> changesProvider, IBulkRepository<TDataObject> bulkRepository, IDataChangesHandler<TDataObject> dataChangesHandler)
         {
             _changesProvider = changesProvider;
             _bulkRepository = bulkRepository;
