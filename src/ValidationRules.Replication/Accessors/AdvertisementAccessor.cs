@@ -28,11 +28,6 @@ namespace NuClear.ValidationRules.Replication.Accessors
                 .GroupBy(x => x.Id)
                 .Select(x => x.Aggregate((a,b) => a.Offset > b.Offset ? a : b));
 
-            // @m.pashuk: не совсем уверен, но ведь эту проблему уже кто-то когда-то где-то должен был решить?
-            // в пакете может несколько раз втречаться один и тот-же РМ.
-            // подскажи, где это решенеи должно быть?
-            dtos = dtos.ToLookup(x => x.Id).Select(x => x.OrderByDescending(x => x.Offset).First());
-
             return dtos.Select(x => new Advertisement
             {
                 Id = x.Id,

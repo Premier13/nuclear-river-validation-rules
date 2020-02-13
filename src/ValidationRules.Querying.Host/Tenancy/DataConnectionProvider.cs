@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Web.Configuration;
-using System.Linq;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using NuClear.Replication.Core.Tenancy;
+using NuClear.ValidationRules.Hosting.Common.Identities.Connections;
 using NuClear.ValidationRules.SingleCheck.Tenancy;
 using NuClear.ValidationRules.Storage;
 
@@ -13,57 +10,33 @@ namespace NuClear.ValidationRules.Querying.Host.Tenancy
     public class DataConnectionProvider : IDataConnectionProvider
     {
         private readonly ITenantProvider _tenantProvider;
-        private readonly IReadOnlyDictionary<string, string> _connectionStrings;
+        private readonly ITenantConnectionStringSettings _connectionStringSettings;
 
-        public DataConnectionProvider(ITenantProvider tenantProvider)
+        public DataConnectionProvider(ITenantProvider tenantProvider,
+            ITenantConnectionStringSettings connectionStringSettings)
         {
             _tenantProvider = tenantProvider;
-            _connectionStrings = WebConfigurationManager.ConnectionStrings
-                .Cast<System.Configuration.ConnectionStringSettings>()
-                .ToDictionary(x => x.Name, x => x.ConnectionString);
+            _connectionStringSettings = connectionStringSettings;
         }
 
-        public DataConnection CreateConnection(string connectionStringName)
+        public DataConnection CreateErmConnection()
         {
-            var dataConnection =  new DataConnection(
+            var dataConnection = new DataConnection(
                 SqlServerTools.GetDataProvider(SqlServerVersion.v2012),
-                GetConnectionString(connectionStringName));
-            Configure(dataConnection, connectionStringName);
+                _connectionStringSettings.GetConnectionString(ErmConnectionStringIdentity.Instance, _tenantProvider.Current));
+            dataConnection.AddMappingSchema(Schema.Erm);
             return dataConnection;
         }
 
-        private void Configure(DataConnection dataConnection, string connectionStringName)
+        public DataConnection CreateVrConnection()
         {
-            if (string.Equals(DataConnectionName.ValidationRules, connectionStringName,
-                StringComparison.InvariantCultureIgnoreCase))
-            {
-                // Schema.Facts needed for Facts.EntityName table
-                dataConnection.AddMappingSchema(Schema.Facts);
-                dataConnection.AddMappingSchema(Schema.Messages);
-            }
-
-            if (string.Equals(DataConnectionName.Erm, connectionStringName,
-                StringComparison.InvariantCultureIgnoreCase))
-            {
-
-            }
-        }
-
-        private string GetConnectionString(string connectionStringName)
-        {
-            var connectionString = default(string);
-            var tenantConnectionStringName = $"{connectionStringName}.{_tenantProvider.Current:G}";
-            if (_connectionStrings.TryGetValue(tenantConnectionStringName, out connectionString)
-                && !string.IsNullOrWhiteSpace(connectionString))
-                return connectionString;
-
-            if (_connectionStrings.TryGetValue(connectionStringName, out connectionString)
-                && !string.IsNullOrWhiteSpace(connectionString))
-                return connectionString;
-
-            throw new ArgumentException(
-                $"No connection string configured for '{connectionStringName}'",
-                nameof(connectionStringName));
+            var dataConnection = new DataConnection(
+                SqlServerTools.GetDataProvider(SqlServerVersion.v2012),
+                _connectionStringSettings.GetConnectionString(ValidationRulesConnectionStringIdentity.Instance, _tenantProvider.Current));
+            // Schema.Facts needed for Facts.EntityName table
+            dataConnection.AddMappingSchema(Schema.Facts);
+            dataConnection.AddMappingSchema(Schema.Messages);
+            return dataConnection;
         }
     }
 }

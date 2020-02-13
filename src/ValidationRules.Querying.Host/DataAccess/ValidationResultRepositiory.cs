@@ -24,7 +24,7 @@ namespace NuClear.ValidationRules.Querying.Host.DataAccess
 
         public IReadOnlyCollection<Version.ValidationResult> GetResults(long versionId, IReadOnlyCollection<long> orderIds, long? projectId, DateTime start, DateTime end, ICheckModeDescriptor checkModeDescriptor)
         {
-            using (var connection = _connectionProvider.CreateConnection(DataConnectionName.ValidationRules))
+            using (var connection = _connectionProvider.CreateVrConnection())
             {
                 var orderIdentities = ToTemporaryTable(connection, orderIds);
                 var validationResults = connection.GetTable<Version.ValidationResult>()

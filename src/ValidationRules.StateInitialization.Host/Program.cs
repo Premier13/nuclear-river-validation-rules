@@ -39,8 +39,7 @@ namespace NuClear.ValidationRules.StateInitialization.Host
             {
                 commands.AddRange(BulkReplicationCommands.ErmToFacts
                     .Where(x => IsConfigured(x, tenants)));
-                commands.Add(new KafkaReplicationCommand(KafkaFactsFlow.Instance,
-                    BulkReplicationCommands.KafkaToFacts));
+                commands.Add(new KafkaReplicationCommand(KafkaFactsFlow.Instance, BulkReplicationCommands.KafkaToFacts));
                 // TODO: отдельный schema init для erm\ams\ruleset facts
                 // мешает таблица EntityName, она общая и у Kafka и у Erm
                 // отдельный schameinit будет перезатирать эту таблицу от другого schemainit, а должен мёрджить

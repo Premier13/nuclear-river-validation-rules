@@ -28,7 +28,7 @@ namespace NuClear.ValidationRules.Querying.Host.DataAccess
 
         public long GetLatestVersion()
         {
-            using (var connection = _connectionProvider.CreateConnection(DataConnectionName.ValidationRules))
+            using (var connection = _connectionProvider.CreateVrConnection())
             {
                 return connection.GetTable<Version.ValidationResult>().Max(x => x.VersionId);
             }
@@ -53,7 +53,7 @@ namespace NuClear.ValidationRules.Querying.Host.DataAccess
             }
             var amsOffset = amsCount - 1;
 
-            using (var connection = _connectionProvider.CreateConnection(DataConnectionName.ValidationRules))
+            using (var connection = _connectionProvider.CreateVrConnection())
             {
                 var connectionLocal = connection;
 

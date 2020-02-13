@@ -25,7 +25,7 @@ namespace NuClear.ValidationRules.SingleCheck.Store
         {
             _equalityComparerFactory = equalityComparerFactory;
 
-            _connection = connectionProvider.CreateConnection(DataConnectionName.ValidationRules)
+            _connection = connectionProvider.CreateVrConnection()
                 .AddMappingSchema(webAppMappingSchema);
 
             // чтобы параллельные запуски single-проверок не накладывали блокировки на webapp-таблицы и не ждали друг друга

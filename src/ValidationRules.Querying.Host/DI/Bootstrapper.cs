@@ -3,8 +3,6 @@ using System.Linq;
 using Microsoft.Practices.Unity;
 using NuClear.Model.Common.Entities;
 using NuClear.Replication.Core.Tenancy;
-using NuClear.River.Hosting.Common.Settings;
-using NuClear.Settings.API;
 using NuClear.Settings.Unity;
 using NuClear.ValidationRules.Hosting.Common;
 using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
@@ -14,7 +12,6 @@ using NuClear.ValidationRules.Querying.Host.Tenancy;
 using NuClear.ValidationRules.SingleCheck;
 using NuClear.ValidationRules.SingleCheck.Tenancy;
 using NuClear.ValidationRules.Storage.Identitites.EntityTypes;
-using IConnectionStringSettings = NuClear.Storage.API.ConnectionStrings.IConnectionStringSettings;
 
 namespace NuClear.ValidationRules.Querying.Host.DI
 {

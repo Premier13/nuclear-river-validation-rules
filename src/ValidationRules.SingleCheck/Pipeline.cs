@@ -104,7 +104,7 @@ namespace NuClear.ValidationRules.SingleCheck
         private void ReadErmSlice(long orderId, IStore store, out ErmDataLoader.ResolvedOrderSummary orderSummary)
         {
             using (var scope = new TransactionScope(TransactionScopeOption.RequiresNew, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-            using (var connection = _connectionProvider.CreateConnection(DataConnectionName.Erm).AddMappingSchema(Schema.Erm))
+            using (var connection = _connectionProvider.CreateErmConnection())
             {
                 ErmDataLoader.Load(orderId, connection, store, out orderSummary);
             }

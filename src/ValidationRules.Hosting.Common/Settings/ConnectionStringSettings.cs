@@ -9,6 +9,10 @@ using NuClear.ValidationRules.Hosting.Common.Identities.Connections;
 
 namespace NuClear.ValidationRules.Hosting.Common.Settings
 {
+    /// <summary>
+    /// Позволяет получать строки подключения коду, не знающему ничего о том, что у нас бывают разные Erm и ServiceBus.
+    /// Регистрируется и живёт только в тех областях, для которых каким-либо образом определён Tenant.
+    /// </summary>
     public class ConnectionStringSettings : IConnectionStringSettings, ISettingsAspect
     {
         private readonly ITenantProvider _tenantProvider;
@@ -27,6 +31,10 @@ namespace NuClear.ValidationRules.Hosting.Common.Settings
             => _connectionStringProvider.GetConnectionString(identity, _tenantProvider.Current);
     }
 
+    /// <summary>
+    /// Позволяет получить строки подключения коду, который знает про то, что Erm и ServiceBus бвают разные
+    /// и хочет сам определять, с какими требуется работать.
+    /// </summary>
     public sealed class TenantConnectionStringSettings : ITenantConnectionStringSettings, IConnectionStringSettings, ISettingsAspect
     {
         private readonly ValidationRulesConnectionStringProvider _connectionStringProvider =

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NuClear.Replication.Core.Tenancy;
+using NuClear.ValidationRules.Hosting.Common.Identities.Connections;
 using NuClear.ValidationRules.Querying.Host.Composition;
 using NuClear.ValidationRules.SingleCheck.Tenancy;
 using NuClear.ValidationRules.Storage.Model.Facts;
@@ -36,7 +37,7 @@ namespace NuClear.ValidationRules.Querying.Host.DataAccess
             // Есть сущности, общие для всех инсталляций - их имена имеют TenantId = 0;
             var tenants = new Tenant[] {0, _tenantProvider.Current};
 
-            using (var connection = _connectionProvider.CreateConnection(DataConnectionName.ValidationRules))
+            using (var connection = _connectionProvider.CreateVrConnection())
             {
                 return connection
                     .GetTable<EntityName>()
