@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using NuClear.Replication.Core;
@@ -42,17 +43,6 @@ namespace NuClear.ValidationRules.Replication.Accessors
         public IReadOnlyCollection<IEvent> HandleDeletes(IReadOnlyCollection<Project> dataObjects)
             => new [] {new DataObjectDeletedEvent(typeof(Project), dataObjects.Select(x => x.Id))};
 
-        public IReadOnlyCollection<IEvent> HandleRelates(IReadOnlyCollection<Project> dataObjects)
-        {
-            var projectIds = dataObjects.Select(x => x.Id).ToHashSet();
-
-            var orderIds = _query.For<Order>()
-                .Where(x => projectIds.Contains(x.ProjectId))
-                .Select(x => x.Id)
-                .Distinct()
-                .ToList();
-
-            return new[] {new RelatedDataObjectOutdatedEvent(typeof(Project), typeof(Order), orderIds)};
-        }
+        public IReadOnlyCollection<IEvent> HandleRelates(IReadOnlyCollection<Project> dataObjects) => Array.Empty<IEvent>();
     }
 }

@@ -24,7 +24,7 @@ namespace NuClear.Replication.Core.DataObjects
         public MergeResult<TDataObject> GetChanges(IReadOnlyCollection<ICommand> commands)
         {
             var specification = _storageBasedDataObjectAccessor.GetFindSpecification(commands);
-            var source = new TransactionDecorator<TDataObject>(_storageBasedDataObjectAccessor.GetSource().WhereMatched(specification));
+            var source = _storageBasedDataObjectAccessor.GetSource().WhereMatched(specification);
             var target = _query.For<TDataObject>().WhereMatched(specification);
             
             var result = _dataChangesDetector.DetectChanges(source, target);
