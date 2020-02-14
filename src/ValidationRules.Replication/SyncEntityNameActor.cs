@@ -42,7 +42,7 @@ namespace NuClear.ValidationRules.Replication
                 {
                     var specification = accessor.GetFindSpecification(syncDataObjectCommands);
 
-                    var source = new TransactionDecorator<EntityName>(accessor.GetSource().WhereMatched(specification));
+                    var source = accessor.GetSource().WhereMatched(specification);
                     var target = _query.For<EntityName>().WhereMatched(specification);
                     var changes = _dataChangesDetector.DetectChanges(source, target);
                     
