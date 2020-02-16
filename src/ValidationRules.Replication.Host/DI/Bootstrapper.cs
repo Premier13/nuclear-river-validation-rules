@@ -274,7 +274,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                 .RegisterType<IPendingChangesHandlingStrategy, NullPendingChangesHandlingStrategy>(Lifetime.Singleton)
                 .RegisterType<IStorageMappingDescriptorProvider, StorageMappingDescriptorProvider>(Lifetime.Singleton)
                 .RegisterType<IEntityContainerNameResolver, DefaultEntityContainerNameResolver>(Lifetime.Singleton)
-                .RegisterType<IManagedConnectionStateScopeFactory, ManagedConnectionStateScopeFactory>(Lifetime.Singleton)
+                .RegisterType<IManagedConnectionStateScopeFactory, NullIManagedConnectionStateScopeFactory>(Lifetime.Singleton)
                 .RegisterType<IDomainContextScope, DomainContextScope>(entryPointSpecificLifetimeManagerFactory())
                 .RegisterType<ScopedDomainContextsStore>(entryPointSpecificLifetimeManagerFactory())
                 .RegisterType<IReadableDomainContext, CachingReadableDomainContext>(entryPointSpecificLifetimeManagerFactory())
