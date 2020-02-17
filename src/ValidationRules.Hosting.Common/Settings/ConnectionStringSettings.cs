@@ -32,7 +32,7 @@ namespace NuClear.ValidationRules.Hosting.Common.Settings
     }
 
     /// <summary>
-    /// Позволяет получить строки подключения коду, который знает про то, что Erm и ServiceBus бвают разные
+    /// Позволяет получить строки подключения коду, который знает про то, что Erm и ServiceBus бывают разные
     /// и хочет сам определять, с какими требуется работать.
     /// </summary>
     public sealed class TenantConnectionStringSettings : ITenantConnectionStringSettings, IConnectionStringSettings,
