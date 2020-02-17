@@ -87,7 +87,7 @@ namespace NuClear.StateInitialization.Core.Actors
                     {
                         var query = new LinqToDbQuery(sourceDataConnection);
                         var accessorInstance = Activator.CreateInstance(accessorType, query);
-                        if (tenant.HasValue)
+                        if (tenant.HasValue && typeof(ITenantEntity).IsAssignableFrom(dataObjectType))
                         {
                             var tenantAccessorType = typeof(TenantAccessor<>).MakeGenericType(dataObjectType);
                             accessorInstance = Activator.CreateInstance(tenantAccessorType, accessorInstance, tenant);
@@ -98,26 +98,6 @@ namespace NuClear.StateInitialization.Core.Actors
                     }
                 }
             }
-        }
-
-        private sealed class TenantAccessor<T> : IStorageBasedDataObjectAccessor<T>
-        {
-            private readonly IStorageBasedDataObjectAccessor<T> _implementation;
-            private readonly Tenant _tenant;
-
-            public TenantAccessor(IStorageBasedDataObjectAccessor<T> implementation, Tenant tenant)
-            {
-                _implementation = implementation;
-                _tenant = tenant;
-            }
-
-            public IQueryable<T> GetSource()
-                => typeof(ITenantEntity).IsAssignableFrom(typeof(T))
-                    ? _implementation.GetSource().Select(_tenant.ApplyToEntity<T>())
-                    : _implementation.GetSource();
-
-            public FindSpecification<T> GetFindSpecification(IReadOnlyCollection<ICommand> commands)
-                => _implementation.GetFindSpecification(commands);
         }
     }
 }

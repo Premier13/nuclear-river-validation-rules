@@ -33,6 +33,10 @@ namespace NuClear.ValidationRules.Replication.Host.Factories
                 childContainer.RegisterType<ITenantProvider, ScopedTenantProvider>();
                 childContainer.RegisterType<IConnectionStringSettings, ConnectionStringSettings>();
             }
+            else
+            {
+                childContainer.RegisterType<ITenantProvider, DefaultTenantProvider>();
+            }
 
             var key = (IJob) childContainer.Resolve(bundle.JobDetail.JobType);
             _containerMap.TryAdd(key, childContainer);
@@ -66,6 +70,11 @@ namespace NuClear.ValidationRules.Replication.Host.Factories
             }
 
             public Tenant Current { get; }
+        }
+
+        private sealed class DefaultTenantProvider : ITenantProvider
+        {
+            public Tenant Current => throw new NotSupportedException("Tetant is not configured for this job.");
         }
     }
 }
