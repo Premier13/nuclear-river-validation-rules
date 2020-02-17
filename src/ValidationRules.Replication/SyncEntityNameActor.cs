@@ -14,20 +14,24 @@ using NuClear.ValidationRules.Storage.Model.Facts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NuClear.Replication.Core.Tenancy;
 
 namespace NuClear.ValidationRules.Replication
 {
     public sealed class SyncEntityNameActor : IActor
     {
         private readonly IQuery _query;
+        private readonly ITenantProvider _tenantProvider;
         private readonly IBulkRepository<EntityName> _bulkRepository;
         private readonly TwoPhaseDataChangesDetector<EntityName> _dataChangesDetector;
 
         public SyncEntityNameActor(IQuery query,
+                                   ITenantProvider tenantProvider,
                                    IBulkRepository<EntityName> bulkRepository,
                                    IEqualityComparerFactory equalityComparerFactory)
         {
             _query = query;
+            _tenantProvider = tenantProvider;
             _bulkRepository = bulkRepository;
             _dataChangesDetector = new TwoPhaseDataChangesDetector<EntityName>(equalityComparerFactory);
         }
@@ -38,14 +42,16 @@ namespace NuClear.ValidationRules.Replication
             var syncDataObjectCommands = commands.OfType<ISyncDataObjectCommand>().ToList();
             if (syncDataObjectCommands.Count != 0)
             {
-                foreach (var accessor in CreateAccessors(_query))
+                foreach (var accessor in CreateAccessors(_query).Select(AddTenancy))
                 {
                     var specification = accessor.GetFindSpecification(syncDataObjectCommands);
 
                     var source = accessor.GetSource().WhereMatched(specification);
-                    var target = _query.For<EntityName>().WhereMatched(specification);
+                    var target = _query.For<EntityName>()
+                        .Where(new FindSpecification<EntityName>(x => x.TenantId == _tenantProvider.Current))
+                        .WhereMatched(specification);
                     var changes = _dataChangesDetector.DetectChanges(source, target);
-                    
+
                     _bulkRepository.Delete(changes.Complement);
                     _bulkRepository.Create(changes.Difference);
                     _bulkRepository.Update(changes.Intersection);
@@ -72,6 +78,10 @@ namespace NuClear.ValidationRules.Replication
 
             return Array.Empty<IEvent>();
         }
+
+        private IStorageBasedDataObjectAccessor<EntityName> AddTenancy(
+            IStorageBasedDataObjectAccessor<EntityName> accessor) =>
+            new TenantAccessor<EntityName>(accessor, _tenantProvider.Current);
 
         private static IEnumerable<IStorageBasedDataObjectAccessor<EntityName>> CreateAccessors(IQuery query)
         {
@@ -131,7 +141,7 @@ namespace NuClear.ValidationRules.Replication
                     Id = x.Id,
                     EntityType = EntityTypeIds.Firm,
                     Name = x.Name
-                }); 
+                });
 
             public FindSpecification<EntityName> GetFindSpecification(IReadOnlyCollection<ICommand> commands)
                 => SyncEntityNameActor.GetFindSpecification(commands,

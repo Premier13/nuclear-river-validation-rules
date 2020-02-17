@@ -29,6 +29,7 @@ using NuClear.DI.Unity.Config.RegistrationResolvers;
 using NuClear.Jobs;
 using NuClear.Jobs.Schedulers;
 using NuClear.Jobs.Schedulers.Exporter;
+using NuClear.Jobs.Settings;
 using NuClear.Jobs.Unity;
 using NuClear.Messaging.API.Processing.Actors.Accumulators;
 using NuClear.Messaging.API.Processing.Actors.Handlers;
@@ -60,9 +61,7 @@ using NuClear.Metamodeling.Provider.Sources;
 using NuClear.Metamodeling.Validators;
 using NuClear.Model.Common.Entities;
 using NuClear.Model.Common.Operations.Identity;
-using NuClear.OperationsLogging;
 using NuClear.OperationsLogging.API;
-using NuClear.OperationsLogging.Transports.ServiceBus;
 using NuClear.OperationsLogging.Transports.ServiceBus.Serialization.ProtoBuf;
 using NuClear.OperationsProcessing.Transports.Kafka;
 using NuClear.OperationsProcessing.Transports.ServiceBus.Primary;
@@ -74,12 +73,10 @@ using NuClear.Replication.OperationsProcessing.Metadata;
 using NuClear.Replication.OperationsProcessing.Transports;
 using NuClear.Replication.OperationsProcessing.Transports.ServiceBus;
 using NuClear.Replication.OperationsProcessing.Transports.ServiceBus.Factories;
-using NuClear.River.Hosting.Common.Identities.Connections;
 using NuClear.River.Hosting.Common.Settings;
 using NuClear.Security;
 using NuClear.Security.API.Auth;
 using NuClear.Security.API.Context;
-using NuClear.Settings.API;
 using NuClear.Settings.Unity;
 using NuClear.Storage.API.ConnectionStrings;
 using NuClear.Storage.API.Readings;
@@ -94,7 +91,6 @@ using NuClear.Tracing.API;
 using NuClear.ValidationRules.Hosting.Common;
 using NuClear.ValidationRules.Hosting.Common.Identities.Connections;
 using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
-using NuClear.ValidationRules.OperationsProcessing.Facts.Kafka;
 using NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams;
 using NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset;
 using NuClear.ValidationRules.Storage.Model.Facts;
@@ -110,29 +106,24 @@ using Version = NuClear.ValidationRules.Storage.Model.Messages.Version;
 
 namespace NuClear.ValidationRules.Replication.Host.DI
 {
-    public static class Bootstrapper
+    public static partial class Bootstrapper
     {
-        public static IUnityContainer ConfigureUnity(ISettingsContainer settingsContainer, ITracer tracer)
+        public static IUnityContainer ConfigureUnity()
         {
             IUnityContainer container = new UnityContainer();
-            var massProcessors = new IMassProcessor[]
-                                 {
-                                     new TaskServiceJobsMassProcessor(container),
-                                 };
-            var storageSettings = settingsContainer.AsSettings<ISqlStoreSettingsAspect>();
+            var massProcessors = new IMassProcessor[] { new TaskServiceJobsMassProcessor(container) };
 
-            var connectionStringSettings = settingsContainer.AsSettings<IConnectionStringSettings>();
-
-            container.AttachQueryableContainerExtension()
-                     .UseParameterResolvers(ParameterResolvers.Defaults)
-                     .ConfigureMetadata()
-                     .ConfigureSettingsAspects(settingsContainer)
-                     .ConfigureTracing(tracer)
-                     .ConfigureSecurityAspects()
-                     .ConfigureQuartz()
-                     .ConfigureOperationsProcessing(connectionStringSettings)
-                     .ConfigureStorage(storageSettings, EntryPointSpecificLifetimeManagerFactory)
-                     .ConfigureReplication(EntryPointSpecificLifetimeManagerFactory);
+            container
+                .ConfigureSettingsAspects(new ReplicationServiceSettings())
+                .AttachQueryableContainerExtension()
+                .UseParameterResolvers(ParameterResolvers.Defaults)
+                .ConfigureMetadata()
+                .ConfigureTracing()
+                .ConfigureSecurityAspects()
+                .ConfigureQuartz()
+                .ConfigureOperationsProcessing()
+                .ConfigureStorage(EntryPointSpecificLifetimeManagerFactory)
+                .ConfigureReplication(EntryPointSpecificLifetimeManagerFactory);
 
             ReplicationRoot.Instance.PerformTypesMassProcessing(massProcessors, true, typeof(object));
 
@@ -144,11 +135,6 @@ namespace NuClear.ValidationRules.Replication.Host.DI
         private static LifetimeManager EntryPointSpecificLifetimeManagerFactory()
         {
             return Lifetime.PerScope;
-        }
-
-        private static IUnityContainer ConfigureTracing(this IUnityContainer container, ITracer tracer)
-        {
-            return container.RegisterInstance(tracer);
         }
 
         private static IUnityContainer ConfigureMetadata(this IUnityContainer container)
@@ -182,7 +168,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             this IUnityContainer container)
         {
             return container.ConfigureQuartzRemoteControl()
-                .RegisterType<IJobFactory, JobFactory>(Lifetime.Singleton, new InjectionConstructor(container.Resolve<UnityJobFactory>(), container.Resolve<ITracer>()))
+                .RegisterType<IJobFactory, JobFactory>(Lifetime.Singleton, new InjectionConstructor(typeof(TenantUnityJobFactory), typeof(ITracer)))
                 .RegisterType<IJobStoreFactory, JobStoreFactory>(Lifetime.Singleton)
                 .RegisterType<ISchedulerManager, SchedulerManager>("default", Lifetime.Singleton)
                 .RegisterType<ISchedulerManager, KafkaFactsImportShedulerManager>("kafka", Lifetime.Singleton)
@@ -193,13 +179,11 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             this IUnityContainer container)
         {
             var environmentSettings = container.Resolve<IEnvironmentSettings>();
-            var connectionStringSettings = container.Resolve<IConnectionStringSettings>();
+            var quartzSettings = container.Resolve<IPersistentStoreSettings>();
             var taskServiceRemoteControlSettings = container.Resolve<ITaskServiceRemoteControlSettings>();
 
             if (taskServiceRemoteControlSettings.RemoteControlEnabled)
             {
-                connectionStringSettings.AllConnectionStrings.TryGetValue(InfrastructureConnectionStringIdentity.Instance, out var quartzStoreConnectionString);
-
                 container.RegisterType<ISchedulerExporterProvider, SchedulerExporterProvider>(Lifetime.Singleton,
                              new InjectionConstructor(environmentSettings.EnvironmentName,
                                  typeof(ITaskServiceRemoteControlSettings),
@@ -208,7 +192,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                                  typeof(ITracer)))
                          .RegisterType<ISchedulerExportPortResolver, SchedulerExportPortResolver>(Lifetime.Singleton)
                          .RegisterType<ISchedulerExporterRegistrar, MsSQLPersistenceSchedulerExporterRegistrar>(Lifetime.Singleton,
-                             new InjectionConstructor(quartzStoreConnectionString));
+                             new InjectionConstructor(quartzSettings.ConnectionString));
             }
             else
             {
@@ -218,11 +202,8 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             return container;
         }
 
-        private static IUnityContainer ConfigureOperationsProcessing(
-            this IUnityContainer container,
-            IConnectionStringSettings connectionStringSettings)
+        private static IUnityContainer ConfigureOperationsProcessing(this IUnityContainer container)
         {
-
 #if DEBUG
             container.RegisterType<ITelemetryPublisher, DebugTelemetryPublisher>(Lifetime.Singleton);
 #else
@@ -237,20 +218,15 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                      .RegisterTypeWithDependencies(typeof(BinaryEntireBrokeredMessage2TrackedUseCaseTransformer), Lifetime.Singleton, null)
                      .RegisterType<IXmlEventSerializer, XmlEventSerializer>();
 
-            container.RegisterType<IEventLoggingStrategyProvider, UnityEventLoggingStrategyProvider>()
-                     .RegisterType<IEvent2BrokeredMessageConverter<IEvent>, Event2BrokeredMessageConverter>()
-                     .RegisterType<IEventLogger, SequentialEventLogger>()
-                     .RegisterType<IServiceBusMessageSender, BatchingServiceBusMessageSender>();
-
-            var kafkaSettingsFactory = new KafkaSettingsFactory(connectionStringSettings);
+            container.RegisterType<IEventLogger, SqlEventLogger>();
 
             // kafka receiver
             container
                 .RegisterType<KafkaReceiver>(Lifetime.Singleton)
                 .RegisterType<IKafkaMessageFlowReceiverFactory, KafkaMessageFlowReceiverFactory>(Lifetime.Singleton)
-                .RegisterInstance<IKafkaSettingsFactory>(kafkaSettingsFactory)
+                .RegisterType<IKafkaSettingsFactory, KafkaSettingsFactory>(Lifetime.Singleton)
                 .RegisterType<KafkaMessageFlowInfoProvider>(Lifetime.Singleton);
-            
+
             // accumulator\handlers
             container
                 .RegisterType<AmsFactsFlowAccumulator>(Lifetime.PerScope)
@@ -259,7 +235,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             return container.RegisterInstance<IParentContainerUsedRegistrationsContainer>(new ParentContainerUsedRegistrationsContainer(), Lifetime.Singleton)
                             .RegisterType(typeof(ServiceBusMessageFlowReceiver), Lifetime.Singleton)
                             .RegisterType<IServiceBusLockRenewer, NullServiceBusLockRenewer>(Lifetime.Singleton)
-                            .RegisterType<IServiceBusSettingsFactory, ServiceBusSettingsFactory>(Lifetime.Singleton)
+                            .RegisterType<IServiceBusSettingsFactory, ServiceBusSettingsFactory>(Lifetime.PerScope)
                             .RegisterType<IServiceBusMessageFlowReceiverFactory, ServiceBusMessageFlowReceiverFactory>(Lifetime.PerScope)
                             .RegisterType<IMessageProcessingStagesFactory, UnityMessageProcessingStagesFactory>(Lifetime.PerScope)
                             .RegisterType<IMessageFlowProcessorFactory, UnityMessageFlowProcessorFactory>(Lifetime.PerScope)
@@ -279,7 +255,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                             .RegisterType<IMessageFlowProcessingObserver, NullMessageFlowProcessingObserver>(Lifetime.Singleton);
         }
 
-        private static IUnityContainer ConfigureStorage(this IUnityContainer container, ISqlStoreSettingsAspect storageSettings, Func<LifetimeManager> entryPointSpecificLifetimeManagerFactory)
+        private static IUnityContainer ConfigureStorage(this IUnityContainer container, Func<LifetimeManager> entryPointSpecificLifetimeManagerFactory)
         {
             // разрешаем update на таблицу состоящую только из Primary Keys
             LinqToDB.Common.Configuration.Linq.IgnoreEmptyUpdate = true;
@@ -289,16 +265,16 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             var schemaMapping = new Dictionary<string, MappingSchema>
                                 {
                                     { Scope.Erm, Schema.Erm },
-                                    { Scope.Facts, Schema.Facts },
-                                    { Scope.Aggregates, Schema.Aggregates },
-                                    { Scope.Messages, Schema.Messages },
+                                    { Scope.ValidationRules, new MappingSchema(Schema.Facts, Schema.Aggregates, Schema.Messages, Schema.Events) },
                                 };
+
+            var storageSettings = container.Resolve<ISqlStoreSettingsAspect>();
 
             return container
                 .RegisterType<IPendingChangesHandlingStrategy, NullPendingChangesHandlingStrategy>(Lifetime.Singleton)
                 .RegisterType<IStorageMappingDescriptorProvider, StorageMappingDescriptorProvider>(Lifetime.Singleton)
                 .RegisterType<IEntityContainerNameResolver, DefaultEntityContainerNameResolver>(Lifetime.Singleton)
-                .RegisterType<IManagedConnectionStateScopeFactory, ManagedConnectionStateScopeFactory>(Lifetime.Singleton)
+                .RegisterType<IManagedConnectionStateScopeFactory, NullIManagedConnectionStateScopeFactory>(Lifetime.Singleton)
                 .RegisterType<IDomainContextScope, DomainContextScope>(entryPointSpecificLifetimeManagerFactory())
                 .RegisterType<ScopedDomainContextsStore>(entryPointSpecificLifetimeManagerFactory())
                 .RegisterType<IReadableDomainContext, CachingReadableDomainContext>(entryPointSpecificLifetimeManagerFactory())
@@ -359,7 +335,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                    .RegisterAccessor<ThemeCategory, ThemeCategoryAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterAccessor<ThemeOrganizationUnit, ThemeOrganizationUnitAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterAccessor<UnlimitedOrder, UnlimitedOrderAccessor>(entryPointSpecificLifetimeManagerFactory)
-                   
+
                    // TODO: все эти сущности обладают Id, поэтому вместо тупого delete all\insert all
                    // тут можно использовать интеллектуальный SyncDataObjectsActor, но проблема в том что нужен рефакторинг
                    // т.к. SyncDataObjectsActor не может работать с объектами, прилетевшими чисто по шине
@@ -392,16 +368,12 @@ namespace NuClear.ValidationRules.Replication.Host.DI
             var readConnectionStringNameMap = new Dictionary<string, IConnectionStringIdentity>
                 {
                     { Scope.Erm, ErmConnectionStringIdentity.Instance },
-                    { Scope.Facts, ValidationRulesConnectionStringIdentity.Instance },
-                    { Scope.Aggregates, ValidationRulesConnectionStringIdentity.Instance },
-                    { Scope.Messages, ValidationRulesConnectionStringIdentity.Instance },
+                    { Scope.ValidationRules, ValidationRulesConnectionStringIdentity.Instance },
                 };
 
             var writeConnectionStringNameMap = new Dictionary<string, IConnectionStringIdentity>
                 {
-                    { Scope.Facts, ValidationRulesConnectionStringIdentity.Instance },
-                    { Scope.Aggregates, ValidationRulesConnectionStringIdentity.Instance },
-                    { Scope.Messages, ValidationRulesConnectionStringIdentity.Instance },
+                    { Scope.ValidationRules, ValidationRulesConnectionStringIdentity.Instance },
                 };
 
             return container.RegisterInstance<IConnectionStringIdentityResolver>(new ConnectionStringIdentityResolver(readConnectionStringNameMap, writeConnectionStringNameMap));
@@ -410,9 +382,7 @@ namespace NuClear.ValidationRules.Replication.Host.DI
         private static class Scope
         {
             public const string Erm = "Erm";
-            public const string Facts = "Facts";
-            public const string Aggregates = "Aggregates";
-            public const string Messages = "Messages";
+            public const string ValidationRules = "ValidationRules";
         }
 
         private sealed class VrTracingJobExecutionObserver : TracingJobExecutionObserver

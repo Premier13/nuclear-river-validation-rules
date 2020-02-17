@@ -41,22 +41,27 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams
             _telemetryPublisher = telemetryPublisher;
             _appropriateTopics = kafkaSettingsFactory.CreateReceiverSettings(AmsFactsFlow.Instance).Topics;
         }
-        
+
         protected override AggregatableMessage<ICommand> Process(KafkaMessageBatch batch)
         {
             var filtered = batch.Results
                 .Where(x => _appropriateTopics.Contains(x.Topic));
 
-            var dtos = _deserializer.Deserialize(filtered).ToList();
-            if (dtos.Count != 0)
+            using (var transaction = new TransactionScope(TransactionScopeOption.Required, _transactionOptions))
             {
-                Process(dtos);
+                var dtos = _deserializer.Deserialize(filtered).ToList();
+                if (dtos.Count != 0)
+                {
+                    Process(dtos);
+                }
+
+                ProcessAmsStates(batch.Results);
+
+                transaction.Complete();
             }
 
-            ProcessAmsStates(batch.Results);
-
             _telemetryPublisher.Completed(batch.Results.Count);
-            
+
             return new AggregatableMessage<ICommand>
             {
                 TargetFlow = MessageFlow,
@@ -66,14 +71,12 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams
 
         private void Process(IReadOnlyCollection<AdvertisementDto> dtos)
         {
-            using var transaction = new TransactionScope(TransactionScopeOption.Required, _transactionOptions);
-
             var commands = new[]
             {
                 new ReplaceDataObjectCommand(typeof(Advertisement), dtos)
             };
             var dataObjectTypes = commands.Select(x => x.DataObjectType).ToHashSet();
-            
+
             var actors = _dataObjectsActorFactory.Create(dataObjectTypes);
             var eventsCollector = new FactsEventCollector();
             foreach (var actor in actors)
@@ -83,11 +86,8 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams
             }
 
             _syncEntityNameActor.ExecuteCommands(commands);
-            
-            using (new TransactionScope(TransactionScopeOption.Suppress))
-                _eventLogger.Log<IEvent>(eventsCollector.Events().Select(x => new FlowEvent(KafkaFactsFlow.Instance, x)).ToList());
 
-            transaction.Complete();
+            _eventLogger.Log<IEvent>(eventsCollector.Events().Select(x => new FlowEvent(KafkaFactsFlow.Instance, x)).ToList());
         }
 
         private void ProcessAmsStates(IReadOnlyCollection<ConsumeResult<Ignore, byte[]>> results)

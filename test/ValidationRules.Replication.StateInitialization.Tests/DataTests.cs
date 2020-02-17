@@ -13,8 +13,9 @@ using NuClear.ValidationRules.Replication.StateInitialization.Tests.Infrastructu
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
-using NuClear.Replication.Core.Tenancy;
+using NuClear.ValidationRules.Hosting.Common.Identities.Connections;
 using ContextEntityTypesProvider = NuClear.ValidationRules.Replication.StateInitialization.Tests.Infrastructure.ContextEntityTypesProvider;
 using CreateDatabaseSchemataCommand = NuClear.ValidationRules.Replication.StateInitialization.Tests.Infrastructure.CreateDatabaseSchemataCommand;
 
@@ -38,9 +39,7 @@ namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
                     new IMetadataSource[] { MetadataSources.SchemaMetadataSource, MetadataSources.TestCaseMetadataSource },
                     Array.Empty<IMetadataProcessor>());
 
-            _container.RegisterType<ITenantConnectionStringSettings, RunnerConnectionStringSettings>()
-                      .RegisterType<IConnectionStringSettings, RunnerConnectionStringSettings>()
-                      .RegisterType<ConnectionStringSettingsAspect, RunnerConnectionStringSettings>()
+            _container.RegisterType<ConnectionStringSettingsAspect>(new InjectionFactory(CreateConnectionStringSettingsAspect))
                       .RegisterType<DataConnectionFactory>()
                       .RegisterInstance<IMetadataProvider>(_metadataProvider)
                       .RegisterType<IContextEntityTypesProvider, ContextEntityTypesProvider>();
@@ -54,6 +53,22 @@ namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
             //createSchemata.Execute();
 
             _testRunner = _container.Resolve<TestRunner>();
+        }
+
+
+        private static ConnectionStringSettingsAspect CreateConnectionStringSettingsAspect(IUnityContainer container)
+        {
+            return new ConnectionStringSettingsAspect(new Dictionary<IConnectionStringIdentity, string>
+            {
+                {
+                    ErmConnectionStringIdentity.Instance,
+                    ConfigurationManager.ConnectionStrings["Erm"].ConnectionString
+                },
+                {
+                    ValidationRulesConnectionStringIdentity.Instance,
+                    ConfigurationManager.ConnectionStrings["ValidationRules"].ConnectionString
+                },
+            });
         }
 
         [SetUp]

@@ -29,23 +29,18 @@ $DBSuffixes = @{
 	'Azerbaijan' = 'AZ'
 }
 
-function Get-DBSuffix($Context){
-
-	$countrySuffix = $DBSuffixes[$Context['Country']];
-
+function Get-DbEnv($Context){
 	switch($Context.EnvType){
 		'Business' {
-			$envTypeSuffix = $Context.EnvType
+			return $Context.EnvType
 		}
 		'Edu' {
-			$envTypeSuffix = $Context.EnvType
+			return $Context.EnvType
 		}
 		default {
-			$envTypeSuffix = $null
+			return $null
 		}
 	}
-
-	return $envTypeSuffix + $countrySuffix + $Context['Index']
 }
 
 function Get-DBHostMetadata($Context){
@@ -74,16 +69,16 @@ function Get-DBHostMetadata($Context){
 }
 
 function Get-KafkaMetadata($Context){
-	
-	$kafkaGroupId = "erm_vr_$($Context.EnvType.ToLowerInvariant())_$($Context.Country.ToLowerInvariant())"
+
+	$kafkaGroupId = "erm_vr_$($Context.EnvType.ToLowerInvariant())"
 	if ($Context['Index']){
 		$kafkaGroupId += "_$($Context.Index)"
 	}
-	
+
 	$metadata = @{
-		'KafkaGroupId' = $kafkaGroupId 
+		'KafkaGroupId' = $kafkaGroupId
 	}
-	
+
 	switch($Context.EnvType){
 		{$_ -in ('Production', 'Load')} {
 			$metadata += @{
@@ -113,29 +108,12 @@ function Get-KafkaMetadata($Context){
 			return @{}
 		}
 	}
-	
-	return $metadata; 
+
+	return $metadata;
 }
 
 function Get-XdtMetadata($Context){
-	$xdt = @('environments\Common\Erm.Release.config')
-
-	switch($Context.EnvType){
-		'Test' {
-			$xdt += @("environments\Templates\Erm.Test.config")
-		}
-		'Production' {
-			$xdt += @("environments\Erm.Production.config")
-		}
-		'Load' {
-			$xdt += @("environments\Erm.Load.config")
-		}
-		default {
-			$xdt += @("environments\Erm.config")
-		}
-	}
-
-	return $xdt
+	return @('environments\Common\Erm.Release.config', "environments\Erm.$($Context.EnvType).config")
 }
 
 function Get-RegexMetadata($Context){
@@ -145,11 +123,8 @@ function Get-RegexMetadata($Context){
 	if ($Context['Index']){
 		$regex += @{ '{EnvNum}' = $Context['Index'] }
 	}
-	if ($Context['Country']){
-		$regex += @{ '{Country}' = $Context['Country'] }
-		$regex += @{ '{DBSuffix}' = (Get-DBSuffix $Context) }
-	}
 	if ($Context['EnvType']){
+		$regex += @{ '{DbEnv}' = (Get-DbEnv $Context) }
 		$regex += @{ '{EnvType}' = $Context['EnvType'] }
 	}
 

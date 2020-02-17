@@ -1,5 +1,5 @@
-﻿param([string[]]$TaskList = @(), [hashtable]$Properties = @{})
-#Requires –Version 3.0
+param([string[]]$TaskList = @(), [hashtable]$Properties = @{})
+#Requires -Version 3.0
 
 if ($TaskList.Count -eq 0){
 	$TaskList = @('Build-Packages')
@@ -7,7 +7,7 @@ if ($TaskList.Count -eq 0){
 
 if ($Properties.Count -eq 0){
 	$Properties.EnvironmentType = 'Test'
-	$Properties.BusinessModel = 'Russia'
+	$Properties.Tenants = 'Russia'
 	$Properties.EnvironmentIndex = '20'
 	$Properties.EntryPoints = @(
 		'ValidationRules.Querying.Host'

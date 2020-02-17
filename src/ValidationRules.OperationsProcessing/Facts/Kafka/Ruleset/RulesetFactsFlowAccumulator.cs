@@ -22,7 +22,7 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
         private readonly IDataObjectsActorFactory _dataObjectsActorFactory;
         private readonly RulesetFactsFlowTelemetryPublisher _telemetryPublisher;
         private readonly IEventLogger _eventLogger;
-       
+
         private readonly TransactionOptions _transactionOptions = new TransactionOptions
         {
             IsolationLevel = IsolationLevel.ReadCommitted,
@@ -42,13 +42,18 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
             var filtered = batch.Results
                 .Where(x => _appropriateTopics.Contains(x.Topic));
 
-            var dtos = _deserializer.Deserialize(filtered).ToList();
-            if (dtos.Count != 0)
+            using (var transaction = new TransactionScope(TransactionScopeOption.Required, _transactionOptions))
             {
-                Process(dtos);
+                var dtos = _deserializer.Deserialize(filtered).ToList();
+                if (dtos.Count != 0)
+                {
+                    Process(dtos);
+                }
+
+                _telemetryPublisher.Completed(batch.Results.Count);
+
+                transaction.Complete();
             }
-            
-            _telemetryPublisher.Completed(batch.Results.Count);
 
             return new AggregatableMessage<ICommand>
             {
@@ -59,8 +64,6 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
 
         private void Process(IReadOnlyCollection<RulesetDto> dtos)
         {
-            using var transaction = new TransactionScope(TransactionScopeOption.Required, _transactionOptions);
-
             var commands = new[]
             {
                 new ReplaceDataObjectCommand(typeof(Storage.Model.Facts.Ruleset), dtos),
@@ -70,7 +73,7 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
                 new ReplaceDataObjectCommand(typeof(Storage.Model.Facts.Ruleset.RulesetProject), dtos),
             };
             var dataObjectTypes = commands.Select(x => x.DataObjectType).ToHashSet();
-            
+
             var actors = _dataObjectsActorFactory.Create(dataObjectTypes);
             var eventsCollector = new FactsEventCollector();
             foreach (var actor in actors)
@@ -79,10 +82,7 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
                 eventsCollector.Add(events);
             }
 
-            using (new TransactionScope(TransactionScopeOption.Suppress))
-                _eventLogger.Log<IEvent>(eventsCollector.Events().Select(x => new FlowEvent(KafkaFactsFlow.Instance, x)).ToList());
-
-            transaction.Complete();
+            _eventLogger.Log<IEvent>(eventsCollector.Events().Select(x => new FlowEvent(KafkaFactsFlow.Instance, x)).ToList());
         }
     }
 }

@@ -10,32 +10,24 @@ Import-Module "$PSScriptRoot\metadata.servicebus.psm1" -DisableNameChecking
 function Get-QuartzConfigMetadata ($Context){
 
 	$quartzConfigs = @()
-	$alterQuartzConfigs = @()
 
 	switch ($Context.EnvType){
-		'Test' {
-			switch ($Context.Country){
-				default {
-					$quartzConfigs += @('Templates\quartz.Test.config')
-				}
-			}
-		}
 		'Production' {
-			switch ($Context.Country){
-				default {
-					$quartzConfigs += @('quartz.Production.config')
-				}
-			}
+			$quartzConfigs += @('Production\kafka.quartz.Production.config')
+			$quartzConfigs += @('Production\quartz.Production.config')
+			$quartzConfigs += @('Production\quartz.Production.ErmFactsFlow.config')
+			$quartzConfigs += @('Production\quartz.Production.ReportingJob.config')
 		}
 		default {
-			$quartzConfigs += @("quartz.$($Context.EnvType).config")
-			$alterQuartzConfigs += @('Templates\quartz.Test.config')
+			$quartzConfigs += @('Default\kafka.quartz.Test.config')
+			$quartzConfigs += @('Default\quartz.Test.config')
+			$quartzConfigs += $Context.Tenants | ForEach-Object { "Default\quartz.Test.$_.config" }
 		}
 	}
 
 	return @{
 		'QuartzConfigs' =  $quartzConfigs
-		'AlterQuartzConfigs' = $alterQuartzConfigs
+		'AlterQuartzConfigs' = @()
 	}
 }
 
@@ -56,21 +48,14 @@ function Get-TargetHostsMetadata ($Context){
 			return @{ 'TargetHosts' = @('uk-erm-iis10', 'uk-erm-iis11', 'uk-erm-iis12') }
 		}
 		'Test' {
-			switch ($Context.Country) {
-				'Russia' {
-					return @{ 'TargetHosts' = @('uk-erm-test03') }
-				}
-				default {
-					return @{ 'TargetHosts' = @('uk-erm-test02') }
-				}
-			}
+			return @{ 'TargetHosts' = @('uk-erm-test03') }
 		}
 		default {
 			$webMetadata = Get-WebMetadata $Context
 			if ($webMetadata -eq $null){
 				throw "Can't find web metadata for entrypoint $($Context.EntryPoint)"
 			}
-			
+
 			return @{'TargetHosts' = $webMetadata[$Context.EntryPoint].TargetHosts}
 		}
 	}
@@ -98,7 +83,7 @@ function Get-WinServiceMetadata ($Context) {
 	$metadata += Get-ServiceNameMetadata $Context
 	$metadata += Get-TransformMetadata $Context
 	$metadata += Get-ServiceBusMetadata $Context
-	
+
 	return @{ "$($Context.EntryPoint)" = $metadata }
 }
 

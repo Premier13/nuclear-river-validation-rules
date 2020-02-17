@@ -29,27 +29,10 @@ namespace NuClear.ValidationRules.Replication.Host
                 Debugger.Launch();
             }
 
-            var settingsContainer = new ReplicationServiceSettings();
-            var environmentSettings = settingsContainer.AsSettings<IEnvironmentSettings>();
-            var connectionStringSettings = settingsContainer.AsSettings<IConnectionStringSettings>();
-
-            var tracer = Log4NetTracerBuilder.Use
-                                             .ApplicationXmlConfig
-                                             .Console
-                                             .EventLog
-                                             .WithGlobalProperties(x =>
-                                                x.Property(TracerContextKeys.Tenant, environmentSettings.EnvironmentName)
-                                                .Property(TracerContextKeys.EntryPoint, environmentSettings.EntryPointName)
-                                                .Property(TracerContextKeys.EntryPointHost, NetworkInfo.ComputerFQDN)
-                                                .Property(TracerContextKeys.EntryPointInstanceId, Guid.NewGuid().ToString()))
-                                             .Logstash(new Uri(connectionStringSettings.GetConnectionString(LoggingConnectionStringIdentity.Instance)),
-                                                appender => { appender.LogstashLayout.IncrementalCounter = true; } )
-                                             .Build;
-
             IUnityContainer container = null;
             try
             {
-                container = Bootstrapper.ConfigureUnity(settingsContainer, tracer);
+                container = Bootstrapper.ConfigureUnity();
                 var schedulerManagers = container.ResolveAll<ISchedulerManager>().ToList();
                 if (IsConsoleMode(args))
                 {

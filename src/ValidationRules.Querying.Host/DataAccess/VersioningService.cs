@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using NuClear.ValidationRules.Hosting.Common;
 using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
+using NuClear.ValidationRules.SingleCheck.Tenancy;
 using Version = NuClear.ValidationRules.Storage.Model.Messages.Version;
 
 namespace NuClear.ValidationRules.Querying.Host.DataAccess
@@ -16,18 +17,18 @@ namespace NuClear.ValidationRules.Querying.Host.DataAccess
         private static readonly TimeSpan WaitTimeout = TimeSpan.FromMinutes(5);
         private static readonly TimeSpan WaitInterval = TimeSpan.FromSeconds(5);
 
-        private readonly DataConnectionFactory _factory;
+        private readonly IDataConnectionProvider _connectionProvider;
         private readonly KafkaMessageFlowInfoProvider _kafkaMessageFlowInfoProvider;
 
-        public VersioningService(DataConnectionFactory factory, KafkaMessageFlowInfoProvider kafkaMessageFlowInfoProvider)
+        public VersioningService(IDataConnectionProvider connectionProvider, KafkaMessageFlowInfoProvider kafkaMessageFlowInfoProvider)
         {
-            _factory = factory;
+            _connectionProvider = connectionProvider;
             _kafkaMessageFlowInfoProvider = kafkaMessageFlowInfoProvider;
         }
 
         public long GetLatestVersion()
         {
-            using (var connection = _factory.CreateDataConnection())
+            using (var connection = _connectionProvider.CreateVrConnection())
             {
                 return connection.GetTable<Version.ValidationResult>().Max(x => x.VersionId);
             }
@@ -52,7 +53,7 @@ namespace NuClear.ValidationRules.Querying.Host.DataAccess
             }
             var amsOffset = amsCount - 1;
 
-            using (var connection = _factory.CreateDataConnection())
+            using (var connection = _connectionProvider.CreateVrConnection())
             {
                 var connectionLocal = connection;
 

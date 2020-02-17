@@ -20,9 +20,7 @@ namespace NuClear.Replication.Core
             HashSet<T> set1;
             using (Probe.Create("Query source"))
             {
-                using var sourceScope = new TransactionScope(TransactionScopeOption.RequiresNew, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
                 set1 = new HashSet<T>(data1, comparer);
-                sourceScope.Complete();
             }
 
             HashSet<T> set2;

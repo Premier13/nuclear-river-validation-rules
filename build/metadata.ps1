@@ -41,7 +41,7 @@ function Get-EntryPointsMetadata ($EntryPoints, $Context) {
 function Get-BulkToolMetadata ($updateSchemas, $Context){
 	$metadata = @{}
 
-	$arguments = @()
+	$arguments = @("-tenants=$($Context.Tenants -join ',')")
 	if($updateSchemas -contains 'ErmFacts') {
 		$arguments += @('-erm-facts', '-aggregates', '-messages')
 	}
@@ -53,6 +53,9 @@ function Get-BulkToolMetadata ($updateSchemas, $Context){
 	}
 	if($updateSchemas -contains 'Messages') {
 		$arguments += @('-messages')
+	}
+	if($updateSchemas -contains 'Events') {
+		$arguments += @('-events')
 	}
 	if($updateSchemas -contains 'WebApp') {
 		$arguments += @('-webapp')
@@ -82,7 +85,7 @@ function Get-MSBuildMetadata {
 		'MSBuild' = @{
 			'Setup' = @{
 				'UseVisualStudioBuild' = $true
-				
+
 				# параллельный билд падает, в sdk пока есть проблемы с этим
 				'MaxCpuCount' = 1
 			}
@@ -111,14 +114,17 @@ function Parse-EnvironmentMetadata ($Properties) {
 	$environmentMetadata += Get-MSBuildMetadata
 	$environmentMetadata += Get-NuGetMetadata
 
-	if ($Properties['EnvironmentType'] -and $Properties['BusinessModel']){
+	if ($Properties['EnvironmentType']){
 		$context = @{
 			'EnvType' = $Properties.EnvironmentType
-			'Country' = $Properties.BusinessModel
+		}
+
+		if($Properties.Tenants) {
+			$context.Tenants = $Properties.Tenants.Split(',')
 		}
 
 		# Используется для именования AppPool сайтов
-		$context.EnvironmentName = "$($context.EnvType).$($context.Country)"
+		$context.EnvironmentName = "$($context.EnvType)"
 
 		if ($Properties['EnvironmentIndex']) {
 			$context.Index = $Properties.EnvironmentIndex
@@ -131,26 +137,26 @@ function Parse-EnvironmentMetadata ($Properties) {
 
 		if ($Properties['EntryPoints']){
 			$entryPoints = $Properties.EntryPoints
-		
+
 			if ($entryPoints -and $entryPoints -isnot [array]){
 				$entryPoints = $entryPoints.Split(@(','), [System.StringSplitOptions]::RemoveEmptyEntries)
 			}
-	
+
 			$environmentMetadata += Get-EntryPointsMetadata $entryPoints $context
 		}
 
 		if ($Properties['UpdateSchemas']){
-			$updateSchemas = $Properties.UpdateSchemas 
-	
+			$updateSchemas = $Properties.UpdateSchemas
+
 			if ($updateSchemas -isnot [array]){
 				$updateSchemas = $updateSchemas.Split(@(','), [System.StringSplitOptions]::RemoveEmptyEntries)
 			}
 			$environmentMetadata += @{ 'UpdateSchemas' = $true }
-	
+
 			$environmentMetadata += Get-BulkToolMetadata $updateSchemas $context
 		}
 	}
-	
+
 	return $environmentMetadata
 }
 

@@ -16,7 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using NuClear.StateInitialization.Core.Storage;
+using NuClear.Replication.Core.Tenancy;
+using NuClear.StateInitialization.Core.Commands;
+using NuClear.ValidationRules.Hosting.Common.Settings;
 
 namespace NuClear.ValidationRules.StateInitialization.Host
 {
@@ -31,11 +33,12 @@ namespace NuClear.ValidationRules.StateInitialization.Host
                 typeof(object));
 
             var commands = new List<ICommand>();
+            var tenants = ParseTenants(args);
 
             if (args.Any(x => x.Contains("-facts")))
             {
                 commands.AddRange(BulkReplicationCommands.ErmToFacts
-                    .Where(x => IsConfigured(x.SourceStorageDescriptor)));
+                    .Where(x => IsConfigured(x, tenants)));
                 commands.Add(new KafkaReplicationCommand(KafkaFactsFlow.Instance, BulkReplicationCommands.KafkaToFacts));
                 // TODO: отдельный schema init для erm\ams\ruleset facts
                 // мешает таблица EntityName, она общая и у Kafka и у Erm
@@ -52,9 +55,14 @@ namespace NuClear.ValidationRules.StateInitialization.Host
             if (args.Contains("-messages"))
             {
                 commands.AddRange(BulkReplicationCommands.ErmToMessages
-                    .Where(x => IsConfigured(x.SourceStorageDescriptor)));
+                    .Where(x => IsConfigured(x, tenants)));
                 commands.Add(BulkReplicationCommands.AggregatesToMessages);
                 commands.Add(SchemaInitializationCommands.Messages);
+            }
+
+            if (args.Contains("-events"))
+            {
+                commands.Add(SchemaInitializationCommands.Events);
             }
 
             var environmentSettings = new EnvironmentSettingsAspect();
@@ -104,20 +112,29 @@ namespace NuClear.ValidationRules.StateInitialization.Host
                 .ApplicationXmlConfig
                 .Console
                 .WithGlobalProperties(x =>
-                    x.Property(TracerContextKeys.Tenant, environmentSettings.EnvironmentName)
+                    x.Property("Environment", environmentSettings.EnvironmentName)
                         .Property(TracerContextKeys.EntryPoint, environmentSettings.EntryPointName)
                         .Property(TracerContextKeys.EntryPointHost, NetworkInfo.ComputerFQDN)
                         .Property(TracerContextKeys.EntryPointInstanceId, Guid.NewGuid().ToString()))
                 .Build;
         }
 
-        private static bool IsConfigured(StorageDescriptor descriptor) =>
-            !string.IsNullOrWhiteSpace(
-                descriptor.Tenant.HasValue
-                    ? ConnectionStringSettings.GetConnectionString(
-                        descriptor.ConnectionStringIdentity,
-                        descriptor.Tenant.Value)
-                    : ConnectionStringSettings.GetConnectionString(
-                        descriptor.ConnectionStringIdentity));
+        private static IReadOnlyCollection<Tenant> ParseTenants(IEnumerable<string> args)
+        {
+            var tenants = args.Where(x => x.StartsWith("-tenants="))
+                .SelectMany(x => x.Replace("-tenants=", "").Split(','))
+                .Select(x => Enum.Parse(typeof(Tenant), x))
+                .Cast<Tenant>()
+                .ToList();
+
+            if (tenants.Count == 0)
+                tenants.AddRange(Enum.GetValues(typeof(Tenant)).Cast<Tenant>());
+
+            return new HashSet<Tenant>(tenants);
+        }
+
+        private static bool IsConfigured(ReplicateInBulkCommand command, IEnumerable<Tenant> tenants)
+            => command.SourceStorageDescriptor.Tenant.HasValue &&
+                tenants.Contains(command.SourceStorageDescriptor.Tenant.Value);
     }
 }

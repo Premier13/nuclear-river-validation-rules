@@ -38,15 +38,15 @@ namespace NuClear.ValidationRules.OperationsProcessing
                         .Accumulator<ErmFactsFlowAccumulator>()
                         .Handler<ErmFactsFlowHandler>()
                         .To.Primary().Flow<ErmFactsFlow>().Connect(),
-                    
+
                     MessageFlowMetadata.Config.For<AggregatesFlow.AggregatesFlow>()
-                        .Receiver<BatchingServiceBusMessageReceiverTelemetryDecorator<AggregatesFlowTelemetryPublisher>>()
+                        .Receiver<SqlEventReceiver<AggregatesFlow.AggregatesFlow>>()
                         .Accumulator<AggregatesFlowAccumulator>()
                         .Handler<AggregatesFlowHandler>()
                         .To.Primary().Flow<AggregatesFlow.AggregatesFlow>().Connect(),
-                    
+
                     MessageFlowMetadata.Config.For<MessagesFlow.MessagesFlow>()
-                        .Receiver<BatchingServiceBusMessageReceiverTelemetryDecorator<MessagesFlowTelemetryPublisher>>()
+                        .Receiver<SqlEventReceiver<MessagesFlow.MessagesFlow>>()
                         .Accumulator<MessagesFlowAccumulator>()
                         .Handler<MessagesFlowHandler>()
                         .To.Primary().Flow<MessagesFlow.MessagesFlow>().Connect()
