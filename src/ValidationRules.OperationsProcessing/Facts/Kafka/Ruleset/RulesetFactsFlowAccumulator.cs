@@ -42,13 +42,18 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
             var filtered = batch.Results
                 .Where(x => _appropriateTopics.Contains(x.Topic));
 
-            var dtos = _deserializer.Deserialize(filtered).ToList();
-            if (dtos.Count != 0)
+            using (var transaction = new TransactionScope(TransactionScopeOption.Required, _transactionOptions))
             {
-                Process(dtos);
-            }
+                var dtos = _deserializer.Deserialize(filtered).ToList();
+                if (dtos.Count != 0)
+                {
+                    Process(dtos);
+                }
 
-            _telemetryPublisher.Completed(batch.Results.Count);
+                _telemetryPublisher.Completed(batch.Results.Count);
+
+                transaction.Complete();
+            }
 
             return new AggregatableMessage<ICommand>
             {
@@ -59,8 +64,6 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
 
         private void Process(IReadOnlyCollection<RulesetDto> dtos)
         {
-            using var transaction = new TransactionScope(TransactionScopeOption.Required, _transactionOptions);
-
             var commands = new[]
             {
                 new ReplaceDataObjectCommand(typeof(Storage.Model.Facts.Ruleset), dtos),
@@ -80,8 +83,6 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
             }
 
             _eventLogger.Log<IEvent>(eventsCollector.Events().Select(x => new FlowEvent(KafkaFactsFlow.Instance, x)).ToList());
-
-            transaction.Complete();
         }
     }
 }

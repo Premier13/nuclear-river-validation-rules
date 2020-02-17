@@ -47,13 +47,18 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams
             var filtered = batch.Results
                 .Where(x => _appropriateTopics.Contains(x.Topic));
 
-            var dtos = _deserializer.Deserialize(filtered).ToList();
-            if (dtos.Count != 0)
+            using (var transaction = new TransactionScope(TransactionScopeOption.Required, _transactionOptions))
             {
-                Process(dtos);
-            }
+                var dtos = _deserializer.Deserialize(filtered).ToList();
+                if (dtos.Count != 0)
+                {
+                    Process(dtos);
+                }
 
-            ProcessAmsStates(batch.Results);
+                ProcessAmsStates(batch.Results);
+
+                transaction.Complete();
+            }
 
             _telemetryPublisher.Completed(batch.Results.Count);
 
@@ -66,8 +71,6 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams
 
         private void Process(IReadOnlyCollection<AdvertisementDto> dtos)
         {
-            using var transaction = new TransactionScope(TransactionScopeOption.Required, _transactionOptions);
-
             var commands = new[]
             {
                 new ReplaceDataObjectCommand(typeof(Advertisement), dtos)
@@ -85,8 +88,6 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams
             _syncEntityNameActor.ExecuteCommands(commands);
 
             _eventLogger.Log<IEvent>(eventsCollector.Events().Select(x => new FlowEvent(KafkaFactsFlow.Instance, x)).ToList());
-
-            transaction.Complete();
         }
 
         private void ProcessAmsStates(IReadOnlyCollection<ConsumeResult<Ignore, byte[]>> results)
