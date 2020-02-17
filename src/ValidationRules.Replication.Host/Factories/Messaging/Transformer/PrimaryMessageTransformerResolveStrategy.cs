@@ -24,18 +24,6 @@ namespace NuClear.ValidationRules.Replication.Host.Factories.Messaging.Transform
                 return true;
             }
 
-            if (messageFlow.Equals(AggregatesFlow.Instance))
-            {
-                resolvedFlowReceiverType = typeof(NullTransformer);
-                return true;
-            }
-
-            if (messageFlow.Equals(MessagesFlow.Instance))
-            {
-                resolvedFlowReceiverType = typeof(NullTransformer);
-                return true;
-            }
-
             resolvedFlowReceiverType = null;
             return false;
         }

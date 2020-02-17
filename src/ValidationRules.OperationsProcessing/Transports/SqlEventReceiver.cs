@@ -22,7 +22,7 @@ namespace NuClear.ValidationRules.OperationsProcessing.Transports
         private readonly IXmlEventSerializer _eventSerializer;
         private readonly IQuery _query;
         private readonly IBulkRepository<EventRecord> _bulkRepository;
-        private readonly SqlEventReceiverConfiguration _configuration;
+        private readonly IReadOnlyCollection<Guid> _consumableFlows;
 
         public SqlEventReceiver(
             IPerformedOperationsReceiverSettings settings,
@@ -35,16 +35,15 @@ namespace NuClear.ValidationRules.OperationsProcessing.Transports
             _eventSerializer = eventSerializer;
             _query = query;
             _bulkRepository = bulkRepository;
-            _configuration = configuration;
+            _consumableFlows = configuration.GetConsumableFlows(MessageFlowBase<TFlow>.Instance)
+                .Select(x => x.Id)
+                .ToList();
         }
 
         public IReadOnlyList<IMessage> Peek()
         {
-            var ids = _configuration.GetConsumableFlows(MessageFlowBase<TFlow>.Instance)
-                .Select(x => x.Id);
-
             var records = _query.For<EventRecord>()
-                .Where(x => ids.Contains(x.Flow))
+                .Where(x => _consumableFlows.Contains(x.Flow))
                 .OrderBy(x => x.Id)
                 .Take(_settings.BatchSize)
                 .ToArray();

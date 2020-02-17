@@ -14,17 +14,12 @@ namespace NuClear.ValidationRules.OperationsProcessing.Transports
         private static readonly IMessageFlow[] MessagesFlowConsumeFlows =
             {AggregatesFlow.AggregatesFlow.Instance};
 
-        public IEnumerable<IMessageFlow> GetConsumableFlows(IMessageFlow flow)
-        {
-            switch (flow)
+        public IEnumerable<IMessageFlow> GetConsumableFlows(IMessageFlow flow) =>
+            flow switch
             {
-                case AggregatesFlow.AggregatesFlow _:
-                    return AggregatesFlowConsumeFlows;
-                case MessagesFlow.MessagesFlow _:
-                    return MessagesFlowConsumeFlows;
-                default:
-                    throw new ArgumentException($"Flow '{flow.GetType().Name}' has no configured consumed flows.");
-            }
-        }
+                AggregatesFlow.AggregatesFlow _ => AggregatesFlowConsumeFlows,
+                MessagesFlow.MessagesFlow _ => MessagesFlowConsumeFlows,
+                _ => throw new ArgumentException($"Flow '{flow.GetType().Name}' has no configured consumed flows.")
+            };
     }
 }

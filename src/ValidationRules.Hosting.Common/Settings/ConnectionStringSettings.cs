@@ -35,7 +35,8 @@ namespace NuClear.ValidationRules.Hosting.Common.Settings
     /// Позволяет получить строки подключения коду, который знает про то, что Erm и ServiceBus бвают разные
     /// и хочет сам определять, с какими требуется работать.
     /// </summary>
-    public sealed class TenantConnectionStringSettings : ITenantConnectionStringSettings, IConnectionStringSettings, ISettingsAspect
+    public sealed class TenantConnectionStringSettings : ITenantConnectionStringSettings, IConnectionStringSettings,
+        ISettingsAspect
     {
         private readonly ValidationRulesConnectionStringProvider _connectionStringProvider =
             new ValidationRulesConnectionStringProvider();
@@ -52,40 +53,25 @@ namespace NuClear.ValidationRules.Hosting.Common.Settings
 
     internal sealed class ValidationRulesConnectionStringProvider
     {
-        public string GetConnectionString(IConnectionStringIdentity identity, Tenant tenant)
-        {
-            switch (identity)
+        public string GetConnectionString(IConnectionStringIdentity identity, Tenant tenant) =>
+            identity switch
             {
-                case ErmConnectionStringIdentity _:
-                    return ConfigurationManager.ConnectionStrings[$"Erm.{tenant:G}"].ConnectionString;
+                ErmConnectionStringIdentity _ => GetConnectionString($"Erm.{tenant:G}"),
+                ServiceBusConnectionStringIdentity _ => GetConnectionString($"ServiceBus.{tenant:G}"),
+                _ => GetConnectionString(identity)
+            };
 
-                case ServiceBusConnectionStringIdentity _:
-                    return ConfigurationManager.ConnectionStrings[$"ServiceBus.{tenant:G}"].ConnectionString;
-
-                default:
-                    return GetConnectionString(identity);
-            }
-        }
-
-        public string GetConnectionString(IConnectionStringIdentity identity)
-        {
-            switch (identity)
+        public string GetConnectionString(IConnectionStringIdentity identity) =>
+            identity switch
             {
-                case ErmConnectionStringIdentity _:
-                    return ConfigurationManager.ConnectionStrings["Erm"].ConnectionString;
+                ErmConnectionStringIdentity _ => GetConnectionString("Erm"),
+                ValidationRulesConnectionStringIdentity _ => GetConnectionString("ValidationRules"),
+                KafkaConnectionStringIdentity _ => GetConnectionString("Kafka"),
+                LoggingConnectionStringIdentity _ => GetConnectionString("Logging"),
+                _ => throw new ArgumentException($"Unsupported connection string identity {identity.GetType().Name}", nameof(identity))
+            };
 
-                case ValidationRulesConnectionStringIdentity _:
-                    return ConfigurationManager.ConnectionStrings["ValidationRules"].ConnectionString;
-
-                case KafkaConnectionStringIdentity _:
-                    return ConfigurationManager.ConnectionStrings["Kafka"].ConnectionString;
-
-                case LoggingConnectionStringIdentity _:
-                    return ConfigurationManager.ConnectionStrings["Logging"].ConnectionString;
-
-                default:
-                    throw new ArgumentException($"Unsupported connection string identity {identity.GetType().Name}", nameof(identity));
-            }
-        }
+        private string GetConnectionString(string name)
+            => ConfigurationManager.ConnectionStrings[name].ConnectionString;
     }
 }
