@@ -65,7 +65,7 @@ function Get-ServiceNameMetadata ($Context) {
 	switch ($Context.EntryPoint) {
 		'ValidationRules.Replication.Host' {
 			return @{
-				'ServiceName' = 'ValidationRules.Replication.Host'
+				'ServiceName' = 'ValidationRules.Replication.Host.United'
 				'ServiceDisplayName' = '2GIS NuClear River ValidationRules Replication Host Service'
 			}
 		}
