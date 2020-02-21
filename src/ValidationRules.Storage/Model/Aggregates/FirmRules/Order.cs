@@ -48,14 +48,10 @@ namespace NuClear.ValidationRules.Storage.Model.Aggregates.FirmRules
             public long OrderPositionId { get; set; }
             public long DestinationFirmId { get; set; }
             public long DestinationFirmAddressId { get; set; }
+            public int SalesModel { get; set; }
         }
 
         public sealed class PremiumPartnerPosition
-        {
-            public long OrderId { get; set; }
-        }
-
-        public sealed class FmcgCutoutPosition
         {
             public long OrderId { get; set; }
         }

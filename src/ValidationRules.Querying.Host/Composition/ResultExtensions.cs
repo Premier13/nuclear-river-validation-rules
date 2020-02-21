@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Newtonsoft.Json;
 using NuClear.ValidationRules.Storage.Model.Aggregates.ConsistencyRules;
 using NuClear.ValidationRules.Storage.Model.Aggregates.FirmRules;
 using Order = NuClear.ValidationRules.Storage.Model.Aggregates.AdvertisementRules.Order;
@@ -136,37 +135,6 @@ namespace NuClear.ValidationRules.Querying.Host.Composition
             result["end"] = end.ToString(CultureInfo.CurrentCulture);
 
             return result;
-        }
-
-        public static string ExtractPeriods(this IReadOnlyDictionary<string, string> extra)
-        {
-            var periods = JsonConvert.DeserializeObject<IReadOnlyCollection<DateTime>>(extra["periods"])
-                .OrderBy(x => x)
-                .Select(x => x.ToString("MMMM yyyy"));
-
-            return string.Join(", ", periods);
-        }
-       
-        public static IReadOnlyDictionary<string, string> UnionPeriods(this IEnumerable<Message> messages, IReadOnlyDictionary<string, string> dictionary)
-        {
-            var result = dictionary.ToDictionary(x => x.Key, x => x.Value);
-            result["periods"] = JsonConvert.SerializeObject(messages.Select(x => x.Extra).SelectMany(MonthlySplit).ToHashSet());
-
-            return result;
-        }
-
-        private static IEnumerable<DateTime> MonthlySplit(IReadOnlyDictionary<string, string> extra)
-            => MonthlySplit(extra["start"], extra["end"]);
-
-        private static IEnumerable<DateTime> MonthlySplit(string start, string end)
-            => MonthlySplit(DateTime.Parse(start), DateTime.Parse(end));
-
-        private static IEnumerable<DateTime> MonthlySplit(DateTime start, DateTime end)
-        {
-            for (var x = start; x < end; x = x.AddMonths(1))
-            {
-                yield return new DateTime(x.Year, x.Month, 1);
-            }
         }
 
         public sealed class CategoryCountDto

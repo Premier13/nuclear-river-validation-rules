@@ -11,8 +11,7 @@ using Version = NuClear.ValidationRules.Storage.Model.Messages.Version;
 namespace NuClear.ValidationRules.Replication.FirmRules.Validation
 {
     /// <summary>
-    /// Тесно связана с проверкой 74
-    /// Для заказов, размещающих позиции партнёрской рекламы (ЗМК-Premium подобные, FMCG) в карточках фирм-рекламодателей, должна выводиться ошибка.
+    /// Для заказов, размещающих позиции партнёрской рекламы в карточках фирм-рекламодателей, должна выводиться ошибка.
     /// "Адрес {0} принадлежит фирме-рекламодателю {1} с заказом {2}"
     /// 
     /// * Не выводить это сообщение в заказе, который размещает ЗМК в карточке своей-же фирмы.
@@ -28,12 +27,10 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Validation
             var messages =
                 from order in query.For<Order>()
                 from fa in query.For<Order.PartnerPosition>().Where(x => x.OrderId == order.Id)
-                from premium in query.For<Order.PremiumPartnerPosition>().Where(x => x.OrderId == order.Id)
                 from anotherOrder in query.For<Order>()
                     .Where(x => x.FirmId != order.FirmId && x.FirmId == fa.DestinationFirmId)
                     .Where(x => Scope.CanSee(order.Scope, x.Scope))
                     .Where(x => x.Start < order.End && order.Start < x.End)
-                from anotherOrderFmcg in query.For<Order.FmcgCutoutPosition>().Where(x => x.OrderId == anotherOrder.Id)
                 select new Version.ValidationResult
                 {
                     MessageParams =

@@ -327,14 +327,11 @@
   <data name="AmsMessagesShouldBeNew" xml:space="preserve">
     <value>Data ze systému AMS jsou zastaralá, výsledky kontrol nejsou věrohodné</value>
   </data>
-  <data name="FirmAddressMustNotHaveMultipleCallToAction" xml:space="preserve">
-    <value>Firmě „{1}“ umístěné na adrese „{0}“ bylo prodáno více než jedno akční tlačítko v záhlaví kartičky, za období: {2}</value>
-  </data>
-  <data name="FirmAddressShouldNotHaveMultiplePartnerAdvertisement" xml:space="preserve">
-    <value>Firmě „{1}“ umístěné na adrese „{0}“ byla prodána více než jedna pozice „Reklama v profilech partnerů“ za období: {2}</value>
-  </data>
   <data name="PartnerAdvertisementShouldNotBeSoldToAdvertiser" xml:space="preserve">
     <value>Adresa {0} patří firmě-zadavateli reklamy {1} s objednávkou {2}</value>
+  </data>
+  <data name="PartnerAdvertisementShouldNotHaveDifferentSalesModel" xml:space="preserve">
+    <value>Adresa {0} vybraná pro pozice s jiným prodejním modelem. Konfliktní objednávka: {1}</value>
   </data>
   <data name="OptionalAdvertisementMustPassReview_Draft" xml:space="preserve">
     <value>Reklamní materiál {0} (není nutný) čeká na moderaci</value>

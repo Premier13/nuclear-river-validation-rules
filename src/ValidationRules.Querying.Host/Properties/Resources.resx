@@ -324,14 +324,11 @@
   <data name="AdvertisementShouldNotHaveComments_OkWithComment" xml:space="preserve">
     <value>Рекламный материал {0} одобрен с замечаниями</value>
   </data>
-  <data name="FirmAddressMustNotHaveMultipleCallToAction" xml:space="preserve">
-    <value>На адрес {0} фирмы {1} продано более одной кнопки в заголовок карточки в периоды: {2}. Конфликтующий заказ: {3}</value>
-  </data>
-  <data name="FirmAddressShouldNotHaveMultiplePartnerAdvertisement" xml:space="preserve">
-    <value>На адрес {0} фирмы {1} продано более одной позиции 'Реклама в профилях партнёров' в периоды: {2}</value>
-  </data>
   <data name="PartnerAdvertisementShouldNotBeSoldToAdvertiser" xml:space="preserve">
     <value>Адрес {0} принадлежит фирме-рекламодателю {1} с заказом {2}</value>
+  </data>
+  <data name="PartnerAdvertisementShouldNotHaveDifferentSalesModel" xml:space="preserve">
+    <value>На адрес {0} оформлены позиции с разными моделями продаж. Конфликтующие заказы: {1}</value>
   </data>
   <data name="AmsMessagesShouldBeNew" xml:space="preserve">
     <value>Данные из системы AMS слишком старые, результаты проверок недостоверны</value>

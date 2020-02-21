@@ -126,7 +126,7 @@ namespace NuClear.ValidationRules.StateInitialization.Host.Kafka
                     _tracer.Info($"Topic {stat.TopicPartition}, End: {stat.End}, Offset: {stat.Offset}, Lag: {stat.Lag}");
                 }
 
-                if (stats.All(x => initialStats[x.TopicPartition].End <= x.Offset))
+                if (stats.All(x => x.End == 0 || initialStats[x.TopicPartition].End <= x.Offset))
                 {
                     break;
                 }

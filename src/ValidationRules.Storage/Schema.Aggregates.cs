@@ -108,10 +108,6 @@ namespace NuClear.ValidationRules.Storage
                     .HasSchemaName(FirmAggregatesSchema)
                     .HasPrimaryKey(x => x.OrderId);
 
-            builder.Entity<FirmAggregates::Order.FmcgCutoutPosition>()
-                   .HasSchemaName(FirmAggregatesSchema)
-                   .HasPrimaryKey(x => x.OrderId);
-
             builder.Entity<FirmAggregates::Order.AddressAdvertisementNonOnTheMap>()
                    .HasSchemaName(FirmAggregatesSchema)
                    .HasPrimaryKey(x => new { x.OrderId, x.OrderPositionId, x.PositionId, x.AddressId });

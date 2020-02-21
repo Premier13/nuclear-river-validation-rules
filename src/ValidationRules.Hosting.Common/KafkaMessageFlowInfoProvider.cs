@@ -33,7 +33,7 @@ namespace NuClear.ValidationRules.Hosting.Common
                     
                     End = offsets.High,
                     Offset = x.Offset,
-                    Lag = offsets.High - x.Offset
+                    Lag = offsets.High - (x.Offset > 0 ? x.Offset : 0),
                 };
             }).ToList();
             

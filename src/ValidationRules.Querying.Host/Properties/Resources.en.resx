@@ -324,14 +324,11 @@
   <data name="AdvertisementShouldNotHaveComments_OkWithComment" xml:space="preserve">
     <value>Advertising material {0} has been approved with comments</value>
   </data>
-  <data name="FirmAddressMustNotHaveMultipleCallToAction" xml:space="preserve">
-    <value>More than one button in the title of a card has been sold for the following address {0} of the company {1} during the following periods: {2}</value>
-  </data>
-  <data name="FirmAddressShouldNotHaveMultiplePartnerAdvertisement" xml:space="preserve">
-    <value>More than one Advertisement in Partners' Profiles position has been sold for the following address {0} of the company {1} during the following periods: {2}</value>
-  </data>
   <data name="PartnerAdvertisementShouldNotBeSoldToAdvertiser" xml:space="preserve">
     <value>The address {0} belongs to the company advertiser {1} with the order {2}</value>
+  </data>
+  <data name="PartnerAdvertisementShouldNotHaveDifferentSalesModel" xml:space="preserve">
+    <value>The address {0} selected for positions with different sales model. Conflicting orders: {1}</value>
   </data>
   <data name="AmsMessagesShouldBeNew" xml:space="preserve">
     <value>Data from AMS system are too old, audit results are unreliable</value>

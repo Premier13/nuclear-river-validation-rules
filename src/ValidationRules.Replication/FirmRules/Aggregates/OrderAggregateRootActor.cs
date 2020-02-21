@@ -25,7 +25,6 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
             IBulkRepository<Order.InvalidFirm> orderInvalidFirmRepository,
             IBulkRepository<Order.PartnerPosition> partnerPositionRepository,
             IBulkRepository<Order.PremiumPartnerPosition> premiumPartnerPositionRepository,
-            IBulkRepository<Order.FmcgCutoutPosition> fmcgCutoutPositionRepository,
             IBulkRepository<Order.AddressAdvertisementNonOnTheMap> addressAdvertisementRepository,
             IBulkRepository<Order.MissingValidPartnerFirmAddresses> missingValidPartnerFirmAddressesRepository,
             IBulkRepository<Order.InvalidFirmAddress> orderInvalidFirmAddressRepository,
@@ -39,7 +38,6 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
                           HasValueObject(new OrderInvalidFirmAccessor(query), orderInvalidFirmRepository),
                           HasValueObject(new PartnerPositionAccessor(query), partnerPositionRepository),
                           HasValueObject(new PremiumPartnerPositionAccessor(query), premiumPartnerPositionRepository),
-                          HasValueObject(new FmcgCutoutPositionAccessor(query), fmcgCutoutPositionRepository),
                           HasValueObject(new AddressAdvertisementNonOnTheMapAccessor(query), addressAdvertisementRepository),
                           HasValueObject(new MissingValidPartnerFirmAddressesAccessor(query), missingValidPartnerFirmAddressesRepository),
                           HasValueObject(new InvalidFirmAddressAccessor(query), orderInvalidFirmAddressRepository),
@@ -59,12 +57,8 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
                         {MessageTypeCode.FirmAndOrderShouldBelongTheSameOrganizationUnit, GetRelatedOrders},
                         {MessageTypeCode.FirmShouldHaveLimitedCategoryCount, GetRelatedOrders},
                         {MessageTypeCode.LinkedFirmShouldBeValid, GetRelatedOrders},
-
-                        {MessageTypeCode.FirmAddressMustNotHaveMultiplePremiumPartnerAdvertisement, GetRelatedOrders},
-                        {MessageTypeCode.FirmAddressShouldNotHaveMultiplePartnerAdvertisement, GetRelatedOrders },
                         {MessageTypeCode.PartnerAdvertisementMustNotCauseProblemsToTheAdvertiser, GetRelatedOrders},
-                        {MessageTypeCode.PartnerAdvertisementShouldNotBeSoldToAdvertiser, GetRelatedOrders},
-                        
+                        {MessageTypeCode.PartnerAdvertisementShouldNotHaveDifferentSalesModel, GetRelatedOrders},
                         {MessageTypeCode.FirmAddressMustBeLocatedOnTheMap, GetRelatedOrders},
                         {MessageTypeCode.AtLeastOneLinkedPartnerFirmAddressShouldBeValid, GetRelatedOrders},
                         {MessageTypeCode.LinkedFirmAddressShouldBeValid, GetRelatedOrders},
@@ -134,10 +128,8 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
             private static IRuleInvalidator CreateInvalidator()
                 => new RuleInvalidator
                     {
-                        {MessageTypeCode.FirmAddressMustNotHaveMultiplePremiumPartnerAdvertisement, GetRelatedOrders},
-                        {MessageTypeCode.FirmAddressShouldNotHaveMultiplePartnerAdvertisement, GetRelatedOrders },
                         {MessageTypeCode.PartnerAdvertisementMustNotCauseProblemsToTheAdvertiser, GetRelatedOrders},
-                        {MessageTypeCode.PartnerAdvertisementShouldNotBeSoldToAdvertiser, GetRelatedOrders},
+                        {MessageTypeCode.PartnerAdvertisementShouldNotHaveDifferentSalesModel, GetRelatedOrders},
                     };
 
             private static IEnumerable<long> GetRelatedOrders(IReadOnlyCollection<Order.PartnerPosition> dataObjects) =>
@@ -152,9 +144,10 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
                     select new Order.PartnerPosition
                     {
                         OrderId = opa.OrderId,
-                        OrderPositionId = opa.OrderPositionId, 
+                        OrderPositionId = opa.OrderPositionId,
                         DestinationFirmAddressId = opa.FirmAddressId.Value,
                         DestinationFirmId = fa.FirmId,
+                        SalesModel = position.SalesModel,
                     };
 
                 return addressPositions;
@@ -175,8 +168,7 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
 
             private static IRuleInvalidator CreateInvalidator() => new RuleInvalidator
             {
-                {MessageTypeCode.FirmAddressMustNotHaveMultiplePremiumPartnerAdvertisement, GetRelatedOrders},
-                {MessageTypeCode.FirmAddressShouldNotHaveMultiplePartnerAdvertisement, GetRelatedOrders },
+                {MessageTypeCode.PartnerAdvertisementMustNotCauseProblemsToTheAdvertiser, GetRelatedOrders},
             };
             
             private static IEnumerable<long> GetRelatedOrders(IReadOnlyCollection<Order.PremiumPartnerPosition> dataObjects) =>
@@ -199,53 +191,6 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
             {
                 var aggregateIds = commands.Cast<ReplaceValueObjectCommand>().SelectMany(c => c.AggregateRootIds).ToHashSet();
                 return new FindSpecification<Order.PremiumPartnerPosition>(x => aggregateIds.Contains(x.OrderId));
-            }
-        }
-
-        public sealed class FmcgCutoutPositionAccessor : DataChangesHandler<Order.FmcgCutoutPosition>, IStorageBasedDataObjectAccessor<Order.FmcgCutoutPosition>
-        {
-            private readonly IQuery _query;
-
-            public FmcgCutoutPositionAccessor(IQuery query) : base(CreateInvalidator()) => _query = query;
-
-            private static IRuleInvalidator CreateInvalidator()
-                => new RuleInvalidator
-                    {
-                        {MessageTypeCode.PartnerAdvertisementMustNotCauseProblemsToTheAdvertiser, GetRelatedOrders}
-                    };
-            
-            private static IEnumerable<long> GetRelatedOrders(IReadOnlyCollection<Order.FmcgCutoutPosition> dataObjects) =>
-                dataObjects.Select(x => x.OrderId);
-
-            public IQueryable<Order.FmcgCutoutPosition> GetSource()
-            {
-                var opaPositions =
-                    from position in _query.For<Facts::Position>()
-                                           .Where(x => Facts::Position.CategoryCodesFmcgCutout.Contains(x.CategoryCode))
-                    from opa in _query.For<Facts::OrderPositionAdvertisement>().Where(x => x.PositionId == position.Id)
-                    select new Order.FmcgCutoutPosition
-                        {
-                            OrderId = opa.OrderId,
-                        };
-
-                var pricePositions =
-                    from position in _query.For<Facts::Position>()
-                                           .Where(x => Facts::Position.CategoryCodesFmcgCutout.Contains(x.CategoryCode))
-                    from pp in _query.For<Facts::PricePosition>().Where(x => x.PositionId == position.Id)
-                    from op in _query.For<Facts::OrderPosition>().Where(x => x.PricePositionId == pp.Id)
-                    select new Order.FmcgCutoutPosition
-                        {
-                            OrderId = op.OrderId,
-                        };
-
-                var result = opaPositions.Union(pricePositions); 
-                return result;
-            }
-
-            public FindSpecification<Order.FmcgCutoutPosition> GetFindSpecification(IReadOnlyCollection<ICommand> commands)
-            {
-                var aggregateIds = commands.Cast<ReplaceValueObjectCommand>().SelectMany(c => c.AggregateRootIds).ToHashSet();
-                return new FindSpecification<Order.FmcgCutoutPosition>(x => aggregateIds.Contains(x.OrderId));
             }
         }
 

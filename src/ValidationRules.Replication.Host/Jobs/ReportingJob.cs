@@ -17,7 +17,6 @@ using NuClear.ValidationRules.OperationsProcessing.AggregatesFlow;
 using NuClear.ValidationRules.OperationsProcessing.MessagesFlow;
 using NuClear.Storage.API.Readings;
 using NuClear.ValidationRules.Storage.Model.Events;
-using System.Linq;
 using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
 using NuClear.ValidationRules.OperationsProcessing.Facts.Erm;
 

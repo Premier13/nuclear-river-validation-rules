@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Transactions;
 
 using NuClear.Replication.Core;
 using NuClear.Replication.Core.Actors;
@@ -37,7 +36,6 @@ namespace NuClear.ValidationRules.Replication.Messages
         private readonly Dictionary<MessageTypeCode, IValidationResultAccessor> _accessors;
         private readonly IEqualityComparer<Version.ValidationResult> _equalityComparer;
         private readonly ValidationResultCache _cache;
-        private readonly TransactionOptions _transactionOptions;
 
         public ValidationRuleActor(IQuery query,
                                    IRepository<Version> versionRepository,
@@ -55,7 +53,6 @@ namespace NuClear.ValidationRules.Replication.Messages
             _accessors = new ValidationRuleRegistry(query).CreateAccessors().ToDictionary(x => (MessageTypeCode)x.MessageTypeId, x => x);
             _equalityComparer = equalityComparerFactory.CreateCompleteComparer<Version.ValidationResult>();
             _cache = cache;
-            _transactionOptions = new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted, Timeout = TimeSpan.Zero };
         }
 
         public IReadOnlyCollection<IEvent> ExecuteCommands(IReadOnlyCollection<ICommand> commands)
@@ -310,9 +307,7 @@ namespace NuClear.ValidationRules.Replication.Messages
                     new FirmAndOrderShouldBelongTheSameOrganizationUnit(_query),
                     new FirmShouldHaveLimitedCategoryCount(_query),
                     new PartnerAdvertisementMustNotCauseProblemsToTheAdvertiser(_query),
-                    new PartnerAdvertisementShouldNotBeSoldToAdvertiser(_query),
-                    new FirmAddressMustNotHaveMultiplePremiumPartnerAdvertisement(_query),
-                    new FirmAddressShouldNotHaveMultiplePartnerAdvertisement(_query),
+                    new PartnerAdvertisementShouldNotHaveDifferentSalesModel(_query),
 
                     new FirmAddressMustBeLocatedOnTheMap(_query),
                     new OrderMustNotIncludeReleasedPeriod(_query),

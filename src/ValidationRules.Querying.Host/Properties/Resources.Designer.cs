@@ -250,24 +250,6 @@ namespace NuClear.ValidationRules.Querying.Host.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to На адрес {0} фирмы {1} продано более одной кнопки в заголовок карточки в периоды: {2}. Конфликтующий заказ: {3}.
-        /// </summary>
-        internal static string FirmAddressMustNotHaveMultipleCallToAction {
-            get {
-                return ResourceManager.GetString("FirmAddressMustNotHaveMultipleCallToAction", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to На адрес {0} фирмы {1} продано более одной позиции &apos;Реклама в профилях партнёров&apos; в периоды: {2}.
-        /// </summary>
-        internal static string FirmAddressShouldNotHaveMultiplePartnerAdvertisement {
-            get {
-                return ResourceManager.GetString("FirmAddressShouldNotHaveMultiplePartnerAdvertisement", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Отделение организации назначения заказа не соответствует отделению организации выбранной фирмы.
         /// </summary>
         internal static string FirmAndOrderShouldBelongTheSameOrganizationUnit {
@@ -723,6 +705,15 @@ namespace NuClear.ValidationRules.Querying.Host.Properties {
         internal static string PartnerAdvertisementShouldNotBeSoldToAdvertiser {
             get {
                 return ResourceManager.GetString("PartnerAdvertisementShouldNotBeSoldToAdvertiser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to На адрес {0} оформлены позиции с разными моделями продаж. Конфликтующие заказы: {1}.
+        /// </summary>
+        internal static string PartnerAdvertisementShouldNotHaveDifferentSalesModel {
+            get {
+                return ResourceManager.GetString("PartnerAdvertisementShouldNotHaveDifferentSalesModel", resourceCulture);
             }
         }
         

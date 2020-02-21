@@ -129,7 +129,6 @@ namespace NuClear.ValidationRules.StateInitialization.Host
                 typeof(FirmAggregates::Order.CategoryNotBelongsToAddress),
                 typeof(FirmAggregates::Order.PartnerPosition),
                 typeof(FirmAggregates::Order.PremiumPartnerPosition),
-                typeof(FirmAggregates::Order.FmcgCutoutPosition),
                 typeof(FirmAggregates::Order.AddressAdvertisementNonOnTheMap),
                 typeof(FirmAggregates::Order.MissingValidPartnerFirmAddresses),
 
