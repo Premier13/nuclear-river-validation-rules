@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "replication run": {
+      "commandName": "Project",
+      "commandLineArgs": "replicate --database \"Data Source=uk-erm-sql02;Initial Catalog=ValidationRulesRU20;Integrated Security=True;Application Name=ValidationRules.StateInitialization.Host\" --topic \"casino_staging_flowFinancialData_compacted\" --brokers \"kafka1.c.n3.hw:9092\" --kafka group.id=crm_vr_dev"
+    },
+    "schema init": {
+      "commandName": "Project",
+      "commandLineArgs": "initialize --database \"Data Source=uk-erm-sql02;Initial Catalog=ValidationRulesRU20;Integrated Security=True;Application Name=ValidationRules.StateInitialization.Host\""
+    }
+  }
+}

@@ -80,6 +80,8 @@ ProjectSection(SolutionItems) = preProject
 	environments\Default\quartz.Test.Uzbekistan.config = environments\Default\quartz.Test.Uzbekistan.config
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValidationRules.Import", "src\ValidationRules.Import\ValidationRules.Import.csproj", "{404907C5-E1CA-49FC-B1A3-0D7D1AB72009}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -154,6 +156,10 @@ Global
 		{DADB9A41-F41B-40CE-9D68-1BB19EC9523B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DADB9A41-F41B-40CE-9D68-1BB19EC9523B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DADB9A41-F41B-40CE-9D68-1BB19EC9523B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{404907C5-E1CA-49FC-B1A3-0D7D1AB72009}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{404907C5-E1CA-49FC-B1A3-0D7D1AB72009}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{404907C5-E1CA-49FC-B1A3-0D7D1AB72009}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{404907C5-E1CA-49FC-B1A3-0D7D1AB72009}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
