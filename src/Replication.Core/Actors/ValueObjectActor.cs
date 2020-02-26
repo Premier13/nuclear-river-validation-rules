@@ -67,6 +67,15 @@ namespace NuClear.Replication.Core.Actors
                     events.AddRange(_dataChangesHandler.HandleRelates(toCreate));
                 }
 
+                var toUpdate = changes.Intersection.ToArray();
+                if (toUpdate.Length != 0)
+                {
+                    events.AddRange(_dataChangesHandler.HandleRelates(toUpdate));
+                    _bulkRepository.Update(toUpdate);
+                    events.AddRange(_dataChangesHandler.HandleRelates(toUpdate));
+                    events.AddRange(_dataChangesHandler.HandleUpdates(toUpdate));
+                }
+
                 return events;
             }
         }
