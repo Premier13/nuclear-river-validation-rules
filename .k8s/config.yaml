@@ -1,0 +1,34 @@
+---
+common:
+  k8s_namespace: a-rechkalov
+
+  app_name: vr-import
+
+  replicas_count: 1
+  image_path: docker-hub.2gis.ru/erm/vr-import   # Change it to your application image
+  image_version: "{{ env='IMAGE_VERSION' }}"    # Takes IMAGE_VERSION from environment
+
+  requests_cpu: "50m"
+  requests_memory: "100Mi"
+  limits_cpu: "100m"
+  limits_memory: "200Mi"
+
+  database: "Data Source={{ env='VR_DB_HOST' }};Initial Catalog={{ env='VR_DB_NAME' }};Application Name=ValidationRules.Import;User Id={{ env='VR_DB_USER' }};Password={{ env='VR_DB_PASSWORD'}};"
+  brokers: "kafka1.c.n3.hw:9092"
+  group_id: "crm_vr_dev"
+  flowFinancialDataTopic: "casino_staging_flowFinancialData_compacted"
+
+staging:
+  templates:
+    - template: deployment.yaml
+
+#production:
+#  # After k8s-handle start this section will be merged with common section, so
+#  # all common variables like app_name, app_port and other will be available in templates rendering.
+#  # But replicas_count will be overrided to 3, due to defined here
+#  replicas_count: 3
+#
+#  templates:
+#    - template: configmap.yaml.j2
+#    - template: deployment.yaml.j2
+#    - template: service.yaml.j2
