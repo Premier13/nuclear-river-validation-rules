@@ -73,6 +73,8 @@ namespace NuClear.ValidationRules.Import.Processing
             //config.Add(new LegalPersonProfileRelationProvider(), x => x.Id);
             //config.Add(new BranchOfficeRelationProvider(), x => x.Id);
             //config.Add(new BranchOfficeOrganizationUnitRelationProvider(), x => x.Id);
+            // config.Add(new CostPerClickCategoryRestrictionRelationProvider(), x => new { x.ProjectId, x.Start, x.CategoryId });
+            // config.Add(new SalesModelCategoryRestrictionRelationProvider(), x => new { x.ProjectId, x.Start, x.CategoryId });
 
             config.Add(new DefaultRelationProvider<Account>(), x => x.Id);
             config.Add(new DefaultRelationProvider<AccountDetail>(), x => x.Id);
@@ -80,6 +82,8 @@ namespace NuClear.ValidationRules.Import.Processing
             config.Add(new DefaultRelationProvider<BranchOfficeOrganizationUnit>(), x => x.Id);
             config.Add(new DefaultRelationProvider<LegalPerson>(), x => x.Id);
             config.Add(new DefaultRelationProvider<LegalPersonProfile>(), x => x.Id);
+            config.Add(new DefaultRelationProvider<CostPerClickCategoryRestriction>(), x => new { x.ProjectId, x.Start, x.CategoryId });
+            config.Add(new DefaultRelationProvider<SalesModelCategoryRestriction>(), x => new { x.ProjectId, x.Start, x.CategoryId });
             config.Add(new DefaultRelationProvider<ConsumerState>(), x => new {x.Topic, x.Partition});
         }
 

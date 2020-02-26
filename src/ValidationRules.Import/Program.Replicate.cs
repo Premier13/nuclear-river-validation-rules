@@ -8,7 +8,11 @@ using NuClear.ValidationRules.Import.Model;
 using NuClear.ValidationRules.Import.Processing;
 using NuClear.ValidationRules.Import.SqlStore;
 
-using CommonFormatAccount = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.Account.Account;
+using Account = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.Account.Account;
+using LegalEntity =  NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalEntity.LegalEntity;
+using LegalUnit = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalUnit.LegalUnit;
+using CpcInfo = NuClear.ValidationRules.Import.Model.CommonFormat.flowAdvModelsInfo.CpcInfo.CpcInfo;
+using AdvModelInRubricInfo = NuClear.ValidationRules.Import.Model.CommonFormat.flowAdvModelsInfo.AdvModelInRubricInfo.AdvModelInRubricInfo;
 
 namespace NuClear.ValidationRules.Import
 {
@@ -22,7 +26,8 @@ namespace NuClear.ValidationRules.Import
                 var dataConnectionFactory = new DataConnectionFactory(database, Schema.Common);
                 var partitionManager = new PartitionManager(dataConnectionFactory);
                 var pollTimeout = TimeSpan.FromMilliseconds(100);
-                var serializer = new XmlSerializer(typeof(CommonFormatAccount));
+                var serializer = new XmlSerializer(typeof(Account),
+                    new[] {typeof(LegalEntity), typeof(LegalUnit), typeof(CpcInfo), typeof(AdvModelInRubricInfo)});
                 var consumer = Consumer.Create(
                     brokers,
                     kafka ?? Array.Empty<string>(),
@@ -44,11 +49,11 @@ namespace NuClear.ValidationRules.Import
                     partitionManager.ThrowIfBackgroundFailed();
                 }
 
-                Log.Info("Shutting down", new {});
+                Log.Info("Shutting down", new { });
                 consumer.Unsubscribe();
                 consumer.Close();
                 consumer.Dispose();
-                Log.Info("Replication completed", new {});
+                Log.Info("Replication completed", new { });
             }
             catch (Exception e)
             {

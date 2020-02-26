@@ -1,9 +1,11 @@
 using System.Collections;
 using Confluent.Kafka;
 
-using CommonFormatAccount = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.Account.Account;
-using CommonFormatLegalEntity = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalEntity.LegalEntity;
-using CommonFormatLegalUnit = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalUnit.LegalUnit;
+using Account = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.Account.Account;
+using LegalEntity = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalEntity.LegalEntity;
+using LegalUnit = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalUnit.LegalUnit;
+using CpcInfo = NuClear.ValidationRules.Import.Model.CommonFormat.flowAdvModelsInfo.CpcInfo.CpcInfo;
+using AdvModelInRubricInfo = NuClear.ValidationRules.Import.Model.CommonFormat.flowAdvModelsInfo.AdvModelInRubricInfo.AdvModelInRubricInfo;
 
 namespace NuClear.ValidationRules.Import.Kafka
 {
@@ -12,9 +14,11 @@ namespace NuClear.ValidationRules.Import.Kafka
         public static IEnumerable Transform(this ConsumeResult<Ignore, object> consumeResult) =>
             consumeResult?.Message?.Value switch
             {
-                CommonFormatAccount account => Transform(consumeResult, account),
-                CommonFormatLegalEntity legalEntity => Transform(consumeResult, legalEntity),
-                CommonFormatLegalUnit legalUnit => Transform(consumeResult, legalUnit),
+                Account account => Transform(consumeResult, account),
+                LegalEntity legalEntity => Transform(consumeResult, legalEntity),
+                LegalUnit legalUnit => Transform(consumeResult, legalUnit),
+                CpcInfo cpcInfo => Transform(consumeResult, cpcInfo),
+                AdvModelInRubricInfo advModelInRubricInfo => Transform(consumeResult, advModelInRubricInfo),
                 _ => null,
             };
     }

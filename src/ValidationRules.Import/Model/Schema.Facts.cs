@@ -43,6 +43,14 @@ namespace NuClear.ValidationRules.Import.Model
                 .HasSchemaName(PersistentFactsSchema)
                 .HasPrimaryKey(x => x.Id);
 
+            builder.Entity<PersistentFacts.CostPerClickCategoryRestriction>()
+                .HasSchemaName(PersistentFactsSchema)
+                .HasPrimaryKey(x => new { x.ProjectId, x.Start, x.CategoryId });
+
+            builder.Entity<PersistentFacts.SalesModelCategoryRestriction>()
+                .HasSchemaName(PersistentFactsSchema)
+                .HasPrimaryKey(x => new { x.ProjectId, x.Start, x.CategoryId });
+
             builder.Entity<PersistentFacts.LegalPerson>()
                 .HasSchemaName(PersistentFactsSchema)
                 .HasPrimaryKey(x => x.Id);
