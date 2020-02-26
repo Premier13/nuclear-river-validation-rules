@@ -73,6 +73,7 @@ namespace NuClear.ValidationRules.Querying.Host.CheckModes
 
                     Rule(MessageTypeCode.LinkedCategoryShouldBelongToFirm,
                          single: RuleSeverityLevel.Warning,
+                         manualReport: RuleSeverityLevel.Error,
                          prerelease: RuleSeverityLevel.Error,
                          release: RuleSeverityLevel.Error),
 

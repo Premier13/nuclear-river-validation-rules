@@ -439,7 +439,7 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
                             CategoryId = opa.CategoryId.Value,
                             OrderPositionId = opa.OrderPositionId,
                             PositionId = opa.PositionId,
-                            MayNotBelongToFirm = position.BindingObjectType == Facts::Position.BindingObjectTypeCategoryMultipleAsterisk,
+                            MayNotBelongToFirm = position.BindingObjectType == Facts::Position.BindingObjectTypeCategoryMultipleAsterisk || opa.CategoryId.Value == Facts::Category.CategoryIdProducts,
                             State = state,
                         };
 
