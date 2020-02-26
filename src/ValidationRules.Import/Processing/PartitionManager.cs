@@ -69,8 +69,13 @@ namespace NuClear.ValidationRules.Import.Processing
         {
             // todo: extract keys from schema
             //config.Add(new AccountRelationProvider(), x => x.Id);
+            //config.Add(new LegalPersonRelationProvider(), x => x.Id);
+            //config.Add(new LegalPersonProfileRelationProvider(), x => x.Id);
+
             config.Add(new DefaultRelationProvider<Account>(), x => x.Id);
             config.Add(new DefaultRelationProvider<AccountDetail>(), x => x.Id);
+            config.Add(new DefaultRelationProvider<LegalPerson>(), x => x.Id);
+            config.Add(new DefaultRelationProvider<LegalPersonProfile>(), x => x.Id);
             config.Add(new DefaultRelationProvider<ConsumerState>(), x => new {x.Topic, x.Partition});
         }
 

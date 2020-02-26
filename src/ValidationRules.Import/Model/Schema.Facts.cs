@@ -1,4 +1,4 @@
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -35,8 +35,12 @@ namespace NuClear.ValidationRules.Import.Model
                 .HasSchemaName(PersistentFactsSchema)
                 .HasPrimaryKey(x => x.Id);
 
-            builder.Entity<FinancialData.AccountDetail>()
-                .HasSchemaName(FactsFinancialDataSchema)
+            builder.Entity<PersistentFacts.LegalPerson>()
+                .HasSchemaName(PersistentFactsSchema)
+                .HasPrimaryKey(x => x.Id);
+
+            builder.Entity<PersistentFacts.LegalPersonProfile>()
+                .HasSchemaName(PersistentFactsSchema)
                 .HasPrimaryKey(x => x.Id);
 
             return builder;
