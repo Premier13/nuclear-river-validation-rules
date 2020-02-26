@@ -35,6 +35,14 @@ namespace NuClear.ValidationRules.Import.Model
                 .HasSchemaName(PersistentFactsSchema)
                 .HasPrimaryKey(x => x.Id);
 
+            builder.Entity<PersistentFacts.BranchOffice>()
+                .HasSchemaName(PersistentFactsSchema)
+                .HasPrimaryKey(x => x.Id);
+
+            builder.Entity<PersistentFacts.BranchOfficeOrganizationUnit>()
+                .HasSchemaName(PersistentFactsSchema)
+                .HasPrimaryKey(x => x.Id);
+
             builder.Entity<PersistentFacts.LegalPerson>()
                 .HasSchemaName(PersistentFactsSchema)
                 .HasPrimaryKey(x => x.Id);

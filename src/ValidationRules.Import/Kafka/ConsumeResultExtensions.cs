@@ -3,6 +3,7 @@ using Confluent.Kafka;
 
 using CommonFormatAccount = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.Account.Account;
 using CommonFormatLegalEntity = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalEntity.LegalEntity;
+using CommonFormatLegalUnit = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalUnit.LegalUnit;
 
 namespace NuClear.ValidationRules.Import.Kafka
 {
@@ -13,6 +14,7 @@ namespace NuClear.ValidationRules.Import.Kafka
             {
                 CommonFormatAccount account => Transform(consumeResult, account),
                 CommonFormatLegalEntity legalEntity => Transform(consumeResult, legalEntity),
+                CommonFormatLegalUnit legalUnit => Transform(consumeResult, legalUnit),
                 _ => null,
             };
     }
