@@ -1,6 +1,6 @@
 using System;
 
-namespace NuClear.ValidationRules.Import.Model.FinancialData
+namespace NuClear.ValidationRules.Import.Model.PersistentFacts
 {
     public class AccountDetail
     {

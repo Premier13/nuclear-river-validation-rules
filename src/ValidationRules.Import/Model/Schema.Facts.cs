@@ -1,4 +1,4 @@
-﻿using System.Xml.Linq;
+using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -25,10 +25,14 @@ namespace NuClear.ValidationRules.Import.Model
             return schema;
         }
 
-        private static FluentMappingBuilder RegisterFinancialData(this FluentMappingBuilder builder)
+        private static FluentMappingBuilder RegisterPersistentFacts(this FluentMappingBuilder builder)
         {
-            builder.Entity<FinancialData.Account>()
-                .HasSchemaName(FactsFinancialDataSchema)
+            builder.Entity<PersistentFacts.Account>()
+                .HasSchemaName(PersistentFactsSchema)
+                .HasPrimaryKey(x => x.Id);
+
+            builder.Entity<PersistentFacts.AccountDetail>()
+                .HasSchemaName(PersistentFactsSchema)
                 .HasPrimaryKey(x => x.Id);
 
             builder.Entity<FinancialData.AccountDetail>()

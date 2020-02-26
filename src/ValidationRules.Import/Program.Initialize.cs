@@ -6,7 +6,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using NuClear.ValidationRules.Import.Model;
 using NuClear.ValidationRules.Import.Model.Events;
-using NuClear.ValidationRules.Import.Model.FinancialData;
+using NuClear.ValidationRules.Import.Model.PersistentFacts;
 using NuClear.ValidationRules.Import.Model.Service;
 using NuClear.ValidationRules.Import.SqlStore;
 

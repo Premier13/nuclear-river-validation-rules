@@ -8,13 +8,13 @@ namespace NuClear.ValidationRules.Import.Model
     {
         private const string FactsSchema = "Facts";
         private const string ServiceSchema = "Service";
-        private const string FactsFinancialDataSchema = "FinancialData";
+        private const string PersistentFactsSchema = "PersistentFacts";
 
         public static MappingSchema Common { get; } =
             new MappingSchema(nameof(Facts), new SqlServerMappingSchema())
                 .RegisterDataTypes()
                 .GetFluentMappingBuilder()
-                .RegisterFinancialData()
+                .RegisterPersistentFacts()
                 .RegisterFacts()
                 .RegisterService()
                 .MappingSchema;

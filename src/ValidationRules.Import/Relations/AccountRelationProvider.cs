@@ -1,7 +1,7 @@
 using System.Linq;
 using LinqToDB.Data;
 using NuClear.ValidationRules.Import.Model.Facts;
-using NuClear.ValidationRules.Import.Model.FinancialData;
+using NuClear.ValidationRules.Import.Model.PersistentFacts;
 using NuClear.ValidationRules.Import.Processing;
 
 namespace NuClear.ValidationRules.Import.Relations
