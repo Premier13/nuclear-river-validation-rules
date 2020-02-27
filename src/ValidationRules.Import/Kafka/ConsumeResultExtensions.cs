@@ -6,6 +6,8 @@ using LegalEntity = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinanc
 using LegalUnit = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalUnit.LegalUnit;
 using CpcInfo = NuClear.ValidationRules.Import.Model.CommonFormat.flowAdvModelsInfo.CpcInfo.CpcInfo;
 using AdvModelInRubricInfo = NuClear.ValidationRules.Import.Model.CommonFormat.flowAdvModelsInfo.AdvModelInRubricInfo.AdvModelInRubricInfo;
+using NomenclatureCategory = NuClear.ValidationRules.Import.Model.CommonFormat.flowNomenclatures.NomenclatureCategory.NomenclatureCategory;
+using NomenclatureElement = NuClear.ValidationRules.Import.Model.CommonFormat.flowNomenclatures.NomenclatureElement.NomenclatureElement;
 
 namespace NuClear.ValidationRules.Import.Kafka
 {
@@ -19,6 +21,8 @@ namespace NuClear.ValidationRules.Import.Kafka
                 LegalUnit legalUnit => Transform(consumeResult, legalUnit),
                 CpcInfo cpcInfo => Transform(consumeResult, cpcInfo),
                 AdvModelInRubricInfo advModelInRubricInfo => Transform(consumeResult, advModelInRubricInfo),
+                NomenclatureCategory nomenclatureCategory => Transform(consumeResult, nomenclatureCategory),
+                NomenclatureElement nomenclatureElement => Transform(consumeResult, nomenclatureElement),
                 _ => null,
             };
     }

@@ -7,12 +7,13 @@ using NuClear.ValidationRules.Import.Kafka;
 using NuClear.ValidationRules.Import.Model;
 using NuClear.ValidationRules.Import.Processing;
 using NuClear.ValidationRules.Import.SqlStore;
-
 using Account = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.Account.Account;
-using LegalEntity =  NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalEntity.LegalEntity;
+using LegalEntity = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalEntity.LegalEntity;
 using LegalUnit = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalUnit.LegalUnit;
 using CpcInfo = NuClear.ValidationRules.Import.Model.CommonFormat.flowAdvModelsInfo.CpcInfo.CpcInfo;
 using AdvModelInRubricInfo = NuClear.ValidationRules.Import.Model.CommonFormat.flowAdvModelsInfo.AdvModelInRubricInfo.AdvModelInRubricInfo;
+using NomenclatureCategory = NuClear.ValidationRules.Import.Model.CommonFormat.flowNomenclatures.NomenclatureCategory.NomenclatureCategory;
+using NomenclatureElement = NuClear.ValidationRules.Import.Model.CommonFormat.flowNomenclatures.NomenclatureElement.NomenclatureElement;
 
 namespace NuClear.ValidationRules.Import
 {
@@ -26,8 +27,12 @@ namespace NuClear.ValidationRules.Import
                 var dataConnectionFactory = new DataConnectionFactory(database, Schema.Common);
                 var partitionManager = new PartitionManager(dataConnectionFactory);
                 var pollTimeout = TimeSpan.FromMilliseconds(100);
-                var serializer = new XmlSerializer(typeof(Account),
-                    new[] {typeof(LegalEntity), typeof(LegalUnit), typeof(CpcInfo), typeof(AdvModelInRubricInfo)});
+                var serializer = new XmlSerializerNomenclatureCategory(typeof(Account),
+                    new[]
+                    {
+                        typeof(LegalEntity), typeof(LegalUnit), typeof(CpcInfo), typeof(AdvModelInRubricInfo),
+                        typeof(NomenclatureCategory), typeof(NomenclatureElement)
+                    });
                 var consumer = Consumer.Create(
                     brokers,
                     kafka ?? Array.Empty<string>(),
