@@ -1,25 +1,23 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Confluent.Kafka;
 using LinqToDB;
 using LinqToDB.Data;
-using NuClear.ValidationRules.Import.Model.Events;
-using NuClear.ValidationRules.Import.Model.PersistentFacts;
 using NuClear.ValidationRules.Import.Model.Service;
 using NuClear.ValidationRules.Import.Relations;
-using NuClear.ValidationRules.Import.SqlStore;
 
 namespace NuClear.ValidationRules.Import.Processing
 {
     public class PartitionManager
     {
         private readonly DataConnectionFactory _dataConnectionFactory;
+        private readonly IReadOnlyCollection<IEntityConfiguration> _configurations;
         private readonly IDictionary<TopicPartition, Producer> _producers;
 
-        public PartitionManager(DataConnectionFactory dataConnectionFactory)
+        public PartitionManager(DataConnectionFactory dataConnectionFactory, IReadOnlyCollection<IEntityConfiguration> configurations)
         {
             _dataConnectionFactory = dataConnectionFactory;
+            _configurations = configurations;
             _producers = new Dictionary<TopicPartition, Producer>();
         }
 
@@ -41,12 +39,12 @@ namespace NuClear.ValidationRules.Import.Processing
             foreach (var topicPartition in topicPartitions)
             {
                 _producers[topicPartition] =
-                    Producer.Create(_dataConnectionFactory, ConfigureProducer, EventFactory);
+                    Producer.Create(_dataConnectionFactory, _configurations);
 
                 var tpo = states.TryGetValue(topicPartition, out var offset)
                     ? new TopicPartitionOffset(topicPartition, offset)
                     : new TopicPartitionOffset(topicPartition, Offset.Beginning);
-                Log.Debug("Producer created",
+                Log.Info("Producer created",
                     new {tpo.Topic, Partition = (int) tpo.Partition, Offset = (int) tpo.Offset});
                 result.Add(tpo);
             }
@@ -59,52 +57,9 @@ namespace NuClear.ValidationRules.Import.Processing
             foreach (var tpo in topicPartitionOffsets)
             {
                 _producers[tpo.TopicPartition].Dispose();
-                Log.Debug("Producer disposed",
+                Log.Info("Producer disposed",
                     new {tpo.Topic, Partition = (int) tpo.Partition, Offset = (int) tpo.Offset});
             }
-        }
-
-        // todo: этот код надо вынести
-        private static void ConfigureProducer(ProducerConfiguration config)
-        {
-            // todo: extract keys from schema
-            //config.Add(new AccountRelationProvider(), x => x.Id);
-            //config.Add(new LegalPersonRelationProvider(), x => x.Id);
-            //config.Add(new LegalPersonProfileRelationProvider(), x => x.Id);
-            //config.Add(new BranchOfficeRelationProvider(), x => x.Id);
-            //config.Add(new BranchOfficeOrganizationUnitRelationProvider(), x => x.Id);
-            // config.Add(new CostPerClickCategoryRestrictionRelationProvider(), x => new { x.ProjectId, x.Start, x.CategoryId });
-            // config.Add(new SalesModelCategoryRestrictionRelationProvider(), x => new { x.ProjectId, x.Start, x.CategoryId });
-
-            config.Add(new DefaultRelationProvider<Account>(), x => x.Id);
-            config.Add(new DefaultRelationProvider<AccountDetail>(), x => x.Id);
-            config.Add(new DefaultRelationProvider<BranchOffice>(), x => x.Id);
-            config.Add(new DefaultRelationProvider<BranchOfficeOrganizationUnit>(), x => x.Id);
-            config.Add(new DefaultRelationProvider<LegalPerson>(), x => x.Id);
-            config.Add(new DefaultRelationProvider<LegalPersonProfile>(), x => x.Id);
-            config.Add(new DefaultRelationProvider<CostPerClickCategoryRestriction>(), x => new { x.ProjectId, x.Start, x.CategoryId });
-            config.Add(new DefaultRelationProvider<SalesModelCategoryRestriction>(), x => new { x.ProjectId, x.Start, x.CategoryId });
-            config.Add(new DefaultRelationProvider<ConsumerState>(), x => new {x.Topic, x.Partition});
-        }
-
-        // todo: и этот код надо вынести
-        private static void EventFactory(DataConnection dataConnection, IReadOnlyCollection<RelationRecord> relations)
-        {
-            const string eventTemplate = "<event type='RelatedDataObjectOutdatedEvent'>" +
-                "<type>{0}</type>" + // NuClear.ValidationRules.Storage.Model.Facts.OrderPosition
-                "<relatedType>{1}</relatedType>" + // NuClear.ValidationRules.Storage.Model.Facts.Order
-                "<relatedId>{2}</relatedId>" + // 1081834304155553024
-                "</event>";
-
-            var flow = Guid.Parse("9BD1C845-2574-4003-8722-8A55B1D4AE38");
-
-            Log.Debug("Events created", new {relations.Count});
-
-            dataConnection.BulkCopy(relations.Select(x => new EventRecord
-            {
-                Flow = flow,
-                Content = string.Format(eventTemplate, x.Type, x.RelatedType, x.RelatedId),
-            }));
         }
 
         public void ThrowIfBackgroundFailed()

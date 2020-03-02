@@ -6,7 +6,7 @@
     },
     "schema init": {
       "commandName": "Project",
-      "commandLineArgs": "initialize --database \"Data Source=uk-erm-sql02;Initial Catalog=ValidationRulesRU20;Integrated Security=True;Application Name=ValidationRules.StateInitialization.Host\""
+      "commandLineArgs": "initialize --database \"Data Source=uk-erm-sql02;Initial Catalog=ValidationRulesRU20;Application Name=ValidationRules.Import;Integrated Security=True;\""
     }
   }
 }

@@ -1,0 +1,38 @@
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using NuClear.ValidationRules.Import.Model.PersistentFacts;
+using NuClear.ValidationRules.Import.Processing;
+
+namespace NuClear.ValidationRules.Import.Relations
+{
+    public sealed class AccountDetailConfiguration : IEntityConfiguration, IRelationProvider<AccountDetail>
+    {
+        public void Apply(Cache cache)
+            => cache.Entity<AccountDetail>()
+                .HasKey(x => x.Id);
+
+        public void Apply(FluentMappingBuilder builder)
+            => builder.Entity<AccountDetail>()
+                .HasSchemaName(Schema.PersistentFactsSchema)
+                .HasPrimaryKey(x => x.Id);
+
+        public void Apply(Writer writer)
+            => writer.Entity<AccountDetail>()
+                .HasRelationsProvider(this)
+                .HasKey(x => x.Id);
+
+        public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<AccountDetail> updated, IQueryable<AccountDetail> outdated)
+        {
+            const string accountDetailName = "NuClear.ValidationRules.Storage.Model.Facts.AccountDetail";
+            const string accountName = "NuClear.ValidationRules.Storage.Model.Facts.Account";
+
+            var accountRelations =
+                from accountDetail in updated.Union(outdated)
+                select new RelationRecord(accountDetailName, accountName, accountDetail.AccountId);
+
+            return accountRelations.ToList();
+        }
+    }
+}

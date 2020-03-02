@@ -4,11 +4,9 @@ using System.CommandLine.Invocation;
 using System.Transactions;
 using LinqToDB;
 using LinqToDB.Data;
-using NuClear.ValidationRules.Import.Model;
-using NuClear.ValidationRules.Import.Model.Events;
 using NuClear.ValidationRules.Import.Model.PersistentFacts;
 using NuClear.ValidationRules.Import.Model.Service;
-using NuClear.ValidationRules.Import.SqlStore;
+using NuClear.ValidationRules.Import.Processing;
 
 namespace NuClear.ValidationRules.Import
 {
@@ -33,12 +31,12 @@ namespace NuClear.ValidationRules.Import
         {
             try
             {
-                var dataConnectionFactory = new DataConnectionFactory(database, Schema.Common);
+                var dataConnectionFactory = new DataConnectionFactory(database, Configurations);
                 using var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionOptions);
                 using var dataConnection = dataConnectionFactory.Create();
 
                 // todo: сделать полноценную инициализацию БД как в "большом" VR
-                var schemas = new[] {"FinancialData", "Service"};
+                var schemas = new[] {"PersistentFacts", "Service"};
                 foreach (var schema in schemas)
                 {
                     dataConnection.Execute(
@@ -48,14 +46,35 @@ namespace NuClear.ValidationRules.Import
                 // todo: если в кафке не полный снимок данных - удаление таблиц недопустимо, нужны миграции.
                 dataConnection.DropTable<Account>(throwExceptionIfNotExists: false);
                 dataConnection.DropTable<AccountDetail>(throwExceptionIfNotExists: false);
-                dataConnection.DropTable<ConsumerState>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<BranchOffice>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<BranchOfficeOrganizationUnit>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<CostPerClickCategoryRestriction>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<LegalPerson>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<LegalPersonProfile>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<NomenclatureCategory>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<Position>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<PositionChild>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<SalesModelCategoryRestriction>(throwExceptionIfNotExists: false);
 
                 dataConnection.CreateTable<Account>();
                 dataConnection.CreateTable<AccountDetail>();
-                dataConnection.CreateTable<ConsumerState>();
+                dataConnection.CreateTable<BranchOffice>();
+                dataConnection.CreateTable<BranchOfficeOrganizationUnit>();
+                dataConnection.CreateTable<CostPerClickCategoryRestriction>();
+                dataConnection.CreateTable<LegalPerson>();
+                dataConnection.CreateTable<LegalPersonProfile>();
+                dataConnection.CreateTable<NomenclatureCategory>();
+                dataConnection.CreateTable<Position>();
+                dataConnection.CreateTable<PositionChild>();
+                dataConnection.CreateTable<SalesModelCategoryRestriction>();
 
                 // ??
+
+                dataConnection.DropTable<EventRecord>(throwExceptionIfNotExists: false);
                 dataConnection.CreateTable<EventRecord>();
+
+                dataConnection.DropTable<ConsumerState>(throwExceptionIfNotExists: false);
+                dataConnection.CreateTable<ConsumerState>();
 
                 // todo: создание индексов, как в большом приложении.
 

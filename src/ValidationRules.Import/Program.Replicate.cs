@@ -1,42 +1,70 @@
 ﻿using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Linq;
 using System.Threading;
-using System.Xml.Serialization;
-using NuClear.ValidationRules.Import.Kafka;
-using NuClear.ValidationRules.Import.Model;
+using NuClear.ValidationRules.Import.Extractors;
+using NuClear.ValidationRules.Import.Extractors.FlowAdvModelsInfo;
+using NuClear.ValidationRules.Import.Extractors.FlowFinancialData;
+using NuClear.ValidationRules.Import.Extractors.FlowNomenclatures;
+using NuClear.ValidationRules.Import.Model.Service;
 using NuClear.ValidationRules.Import.Processing;
-using NuClear.ValidationRules.Import.SqlStore;
-using Account = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.Account.Account;
-using LegalEntity = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalEntity.LegalEntity;
-using LegalUnit = NuClear.ValidationRules.Import.Model.CommonFormat.flowFinancialData.LegalUnit.LegalUnit;
-using CpcInfo = NuClear.ValidationRules.Import.Model.CommonFormat.flowAdvModelsInfo.CpcInfo.CpcInfo;
-using AdvModelInRubricInfo = NuClear.ValidationRules.Import.Model.CommonFormat.flowAdvModelsInfo.AdvModelInRubricInfo.AdvModelInRubricInfo;
-using NomenclatureCategory = NuClear.ValidationRules.Import.Model.CommonFormat.flowNomenclatures.NomenclatureCategory.NomenclatureCategory;
-using NomenclatureElement = NuClear.ValidationRules.Import.Model.CommonFormat.flowNomenclatures.NomenclatureElement.NomenclatureElement;
+using NuClear.ValidationRules.Import.Relations;
 
 namespace NuClear.ValidationRules.Import
 {
     public static partial class Program
     {
-        private static void Replicate(string database, string brokers, string[] topic, string[] kafka,
+        private static readonly IFactExtractor[] FactExtractors =
+        {
+            new FactExtractor(new IXmlFactExtractor[]
+            {
+                new AdvModelInRubricInfoExtractor(),
+                new CpcInfoExtractor(),
+                new AccountExtractor(),
+                new LegalEntityExtractor(),
+                new LegalUnitExtractor(),
+                new NomenclatureCategoryExtractor(),
+                new NomenclatureElementExtractor(),
+            }),
+        };
+
+        private static readonly IEntityConfiguration[] Configurations =
+        {
+            new ConsumerStateConfiguration(),
+
+            new AccountConfiguration(),
+            new AccountDetailConfiguration(),
+            new BranchOfficeOrganizationUnitConfiguration(),
+            new BranchOfficeConfiguration(),
+            new CostPerClickCategoryRestrictionConfiguration(),
+            new LegalPersonConfiguration(),
+            new LegalPersonProfileConfiguration(),
+            new NomenclatureCategoryConfiguration(),
+            new PositionChildConfiguration(),
+            new PositionConfiguration(),
+            new SalesModelCategoryRestrictionConfiguration(),
+        };
+
+        private static void Replicate(
+            string database,
+            string brokers,
+            string[] topic,
+            string[] kafka,
             CancellationToken token)
         {
+            // разрешаем update на таблицу состоящую только из Primary Keys
+            LinqToDB.Common.Configuration.Linq.IgnoreEmptyUpdate = true;
+
             try
             {
-                var dataConnectionFactory = new DataConnectionFactory(database, Schema.Common);
-                var partitionManager = new PartitionManager(dataConnectionFactory);
+                var dataConnectionFactory = new DataConnectionFactory(database, Configurations);
+                var partitionManager = new PartitionManager(dataConnectionFactory, Configurations);
                 var pollTimeout = TimeSpan.FromMilliseconds(100);
-                var serializer = new XmlSerializerNomenclatureCategory(typeof(Account),
-                    new[]
-                    {
-                        typeof(LegalEntity), typeof(LegalUnit), typeof(CpcInfo), typeof(AdvModelInRubricInfo),
-                        typeof(NomenclatureCategory), typeof(NomenclatureElement)
-                    });
                 var consumer = Consumer.Create(
                     brokers,
                     kafka ?? Array.Empty<string>(),
-                    serializer,
+                    FactExtractors,
                     partitionManager);
 
                 consumer.Subscribe(topic);
@@ -46,9 +74,14 @@ namespace NuClear.ValidationRules.Import
                     var consumeResult = consumer.Consume(pollTimeout);
                     if (consumeResult != null)
                     {
-                        var enumerable = consumeResult.Transform();
+                        var state = new ConsumerState
+                        {
+                            Topic = consumeResult.Topic,
+                            Offset = consumeResult.Offset,
+                            Partition = consumeResult.Partition
+                        };
                         var producer = partitionManager[consumeResult.TopicPartition];
-                        producer.InsertOrUpdate(enumerable);
+                        producer.InsertOrUpdate(consumeResult.Value.Concat(new[] {state}));
                     }
 
                     partitionManager.ThrowIfBackgroundFailed();
