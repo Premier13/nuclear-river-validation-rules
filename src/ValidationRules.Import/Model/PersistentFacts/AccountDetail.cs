@@ -2,7 +2,7 @@ using System;
 
 namespace NuClear.ValidationRules.Import.Model.PersistentFacts
 {
-    public class AccountDetail
+    public class AccountDetail : IDeletable
     {
         public long Id { get; set; }
         public bool IsDeleted { get; set; }

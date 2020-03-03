@@ -1,6 +1,6 @@
 namespace NuClear.ValidationRules.Import.Model.PersistentFacts
 {
-    public class BranchOfficeOrganizationUnit
+    public class BranchOfficeOrganizationUnit : IDeletable
     {
         public long Id { get; set; }
         public long BranchOfficeId { get; set; }

@@ -25,14 +25,14 @@ namespace NuClear.ValidationRules.Import.Relations
                 .HasKey(x => new {x.ProjectId, x.Start, x.CategoryId});
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,
-            IQueryable<SalesModelCategoryRestriction> updated, IQueryable<SalesModelCategoryRestriction> outdated)
+            IQueryable<SalesModelCategoryRestriction> actual, IQueryable<SalesModelCategoryRestriction> outdated)
         {
             const string salesModelCategoryRestrictionName =
                 "NuClear.ValidationRules.Storage.Model.Facts.SalesModelCategoryRestriction";
             const string projectName = "NuClear.ValidationRules.Storage.Model.Facts.Project";
 
             var projectRelations =
-                from restriction in updated.Union(outdated)
+                from restriction in actual.Union(outdated)
                 select new RelationRecord(salesModelCategoryRestrictionName, projectName, restriction.ProjectId);
 
             return projectRelations.ToList();

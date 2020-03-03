@@ -15,6 +15,6 @@ namespace NuClear.ValidationRules.Import.Relations
 
     public interface IRelationProvider<T>
     {
-        IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<T> updated, IQueryable<T> outdated);
+        IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<T> actual, IQueryable<T> outdated);
     }
 }

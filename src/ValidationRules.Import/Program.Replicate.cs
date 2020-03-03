@@ -38,6 +38,7 @@ namespace NuClear.ValidationRules.Import
             new BranchOfficeOrganizationUnitConfiguration(),
             new BranchOfficeConfiguration(),
             new CostPerClickCategoryRestrictionConfiguration(),
+            new EntityNameConfiguration(),
             new LegalPersonConfiguration(),
             new LegalPersonProfileConfiguration(),
             new NomenclatureCategoryConfiguration(),

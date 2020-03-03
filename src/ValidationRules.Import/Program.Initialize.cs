@@ -76,6 +76,9 @@ namespace NuClear.ValidationRules.Import
                 dataConnection.DropTable<ConsumerState>(throwExceptionIfNotExists: false);
                 dataConnection.CreateTable<ConsumerState>();
 
+                dataConnection.DropTable<EntityName>(throwExceptionIfNotExists: false);
+                dataConnection.CreateTable<EntityName>();
+
                 // todo: создание индексов, как в большом приложении.
 
                 transaction.Complete();

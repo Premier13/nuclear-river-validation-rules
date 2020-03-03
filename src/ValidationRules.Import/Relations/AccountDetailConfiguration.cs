@@ -23,13 +23,13 @@ namespace NuClear.ValidationRules.Import.Relations
                 .HasRelationsProvider(this)
                 .HasKey(x => x.Id);
 
-        public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<AccountDetail> updated, IQueryable<AccountDetail> outdated)
+        public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<AccountDetail> actual, IQueryable<AccountDetail> outdated)
         {
             const string accountDetailName = "NuClear.ValidationRules.Storage.Model.Facts.AccountDetail";
             const string accountName = "NuClear.ValidationRules.Storage.Model.Facts.Account";
 
             var accountRelations =
-                from accountDetail in updated.Union(outdated)
+                from accountDetail in actual.Union(outdated)
                 select new RelationRecord(accountDetailName, accountName, accountDetail.AccountId);
 
             return accountRelations.ToList();

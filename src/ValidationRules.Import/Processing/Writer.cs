@@ -55,6 +55,9 @@ namespace NuClear.ValidationRules.Import.Processing
 
                     var entityRelations = writer.Write(dataConnection, value);
 
+                    Log.Debug("Write entities completed",
+                        new {Type = key.Name, value.Count, RelationCount = entityRelations.Count});
+
                     if (token.IsCancellationRequested)
                         return;
 

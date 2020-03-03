@@ -26,7 +26,7 @@ namespace NuClear.ValidationRules.Import.Relations
                 .HasKey(x => x.Id);
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,
-            IQueryable<NomenclatureCategory> updated, IQueryable<NomenclatureCategory> outdated)
+            IQueryable<NomenclatureCategory> actual, IQueryable<NomenclatureCategory> outdated)
         {
             // тип ни на что не влияет. он вообще в таком случае нужен?
             // ps. сам - может и не нужен, но его название - да.

@@ -30,18 +30,18 @@ namespace NuClear.ValidationRules.Import.Processing
                 _connectionString);
             connection.AddMappingSchema(_schema);
 
-            DataConnection.TurnTraceSwitchOn();
-            DataConnection.WriteTraceLine = (s1, s2) =>
-            {
-                lock (this)
-                {
-                    File.AppendAllLines(@"c:\dev\log.txt", new[]
-                    {
-                        "===================================",
-                        s1
-                    });
-                }
-            };
+            // DataConnection.TurnTraceSwitchOn();
+            // DataConnection.WriteTraceLine = (s1, s2) =>
+            // {
+            //     lock (this)
+            //     {
+            //         File.AppendAllLines(@"c:\dev\log.txt", new[]
+            //         {
+            //             "===================================",
+            //             s1
+            //         });
+            //     }
+            // };
 
             return connection;
         }

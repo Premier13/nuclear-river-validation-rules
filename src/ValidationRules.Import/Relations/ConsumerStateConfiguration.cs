@@ -24,7 +24,7 @@ namespace NuClear.ValidationRules.Import.Relations
                 .HasRelationsProvider(this)
                 .HasKey(x => new {x.Topic, x.Partition});
 
-        public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<ConsumerState> updated, IQueryable<ConsumerState> outdated)
+        public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<ConsumerState> actual, IQueryable<ConsumerState> outdated)
             => Array.Empty<RelationRecord>();
     }
 }

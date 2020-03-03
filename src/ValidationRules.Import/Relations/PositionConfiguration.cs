@@ -26,19 +26,19 @@ namespace NuClear.ValidationRules.Import.Relations
                 .HasKey(x => x.Id);
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,
-            IQueryable<Position> updated, IQueryable<Position> outdated)
+            IQueryable<Position> actual, IQueryable<Position> outdated)
         {
             const string positionName = "NuClear.ValidationRules.Storage.Model.Facts.Position";
             const string orderName = "NuClear.ValidationRules.Storage.Model.Facts.Order";
 
             var orderRelationsByOpa =
-                from position in updated.Union(outdated)
+                from position in actual.Union(outdated)
                 from opa in dataConnection.GetTable<OrderPositionAdvertisement>()
                     .InnerJoin(x => x.PositionId == position.Id)
                 select new RelationRecord(positionName, orderName, opa.OrderId);
 
             var orderRelationsByPricePosition =
-                from position in updated.Union(outdated)
+                from position in actual.Union(outdated)
                 from pricePosition in dataConnection.GetTable<PricePosition>()
                     .InnerJoin(x => x.PositionId == position.Id)
                 from orderPosition in dataConnection.GetTable<OrderPosition>()

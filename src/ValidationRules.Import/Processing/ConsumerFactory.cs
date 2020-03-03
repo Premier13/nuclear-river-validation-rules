@@ -20,6 +20,7 @@ namespace NuClear.ValidationRules.Import.Processing
             {
                 BootstrapServers = brokers,
             };
+            config.Set("partition.assignment.strategy", "roundrobin");
 
             return new ConsumerBuilder<Ignore, IEnumerable<object>>(config)
                 .SetKeyDeserializer(Deserializers.Ignore)

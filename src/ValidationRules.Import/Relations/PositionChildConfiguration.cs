@@ -26,13 +26,13 @@ namespace NuClear.ValidationRules.Import.Relations
                 .HasKey(x => new {x.ChildPositionId, x.MasterPositionId});
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,
-            IQueryable<PositionChild> updated, IQueryable<PositionChild> outdated)
+            IQueryable<PositionChild> actual, IQueryable<PositionChild> outdated)
         {
             const string positionName = "NuClear.ValidationRules.Storage.Model.Facts.Position";
             const string orderName = "NuClear.ValidationRules.Storage.Model.Facts.Order";
 
             var orderRelations =
-                from position in updated.Union(outdated)
+                from position in actual.Union(outdated)
                 from pricePosition in dataConnection.GetTable<PricePosition>()
                     .InnerJoin(x => x.PositionId == position.MasterPositionId)
                 from orderPosition in dataConnection.GetTable<OrderPosition>()

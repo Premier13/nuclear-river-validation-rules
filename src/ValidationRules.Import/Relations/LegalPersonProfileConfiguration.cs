@@ -26,13 +26,13 @@ namespace NuClear.ValidationRules.Import.Relations
                 .HasKey(x => x.Id);
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,
-            IQueryable<LegalPersonProfile> updated, IQueryable<LegalPersonProfile> outdated)
+            IQueryable<LegalPersonProfile> actual, IQueryable<LegalPersonProfile> outdated)
         {
             const string legalPersonProfileName = "NuClear.ValidationRules.Storage.Model.Facts.LegalPersonProfile";
             const string orderName = "NuClear.ValidationRules.Storage.Model.Facts.Order";
 
             var orderRelations =
-                from legalPersonProfile in updated.Union(outdated)
+                from legalPersonProfile in actual.Union(outdated)
                 from order in dataConnection.GetTable<OrderConsistency>()
                     .InnerJoin(x => x.LegalPersonId == legalPersonProfile.LegalPersonId)
                 select new RelationRecord(legalPersonProfileName, orderName, order.Id);

@@ -1,6 +1,6 @@
 namespace NuClear.ValidationRules.Import.Model.PersistentFacts
 {
-    public sealed class Position
+    public sealed class Position : IDeletable
     {
         public long Id { get; set; }
 

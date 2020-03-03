@@ -25,20 +25,20 @@ namespace NuClear.ValidationRules.Import.Relations
                 .HasRelationsProvider(this)
                 .HasKey(x => x.Id);
 
-        public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<Account> updated, IQueryable<Account> outdated)
+        public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<Account> actual, IQueryable<Account> outdated)
         {
             const string accountName = "NuClear.ValidationRules.Storage.Model.Facts.Account";
             const string orderName = "NuClear.ValidationRules.Storage.Model.Facts.Order";
 
             var orderRelations =
-                from account in updated.Union(outdated)
+                from account in actual.Union(outdated)
                 from order in dataConnection.GetTable<OrderConsistency>()
                     .InnerJoin(x => x.LegalPersonId == account.LegalPersonId &&
                         x.BranchOfficeOrganizationUnitId == account.BranchOfficeOrganizationUnitId)
                 select new RelationRecord(accountName, orderName, order.Id);
 
             var accountRelations =
-                from account in updated.Union(outdated)
+                from account in actual.Union(outdated)
                 select new RelationRecord(accountName, accountName, account.Id);
 
             var result = new List<RelationRecord>();

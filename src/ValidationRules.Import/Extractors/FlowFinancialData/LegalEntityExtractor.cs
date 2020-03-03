@@ -9,7 +9,11 @@ namespace NuClear.ValidationRules.Import.Extractors.FlowFinancialData
     {
         protected override IEnumerable<object> Extract(LegalEntity legalEntity)
         {
-            yield return new LegalPerson {Id = legalEntity.Code, IsDeleted = legalEntity.IsDeleted || legalEntity.IsHidden};
+            yield return new LegalPerson
+            {
+                Id = legalEntity.Code,
+                IsDeleted = legalEntity.IsDeleted || legalEntity.IsHidden,
+            };
 
             if (legalEntity.Profiles != null)
             {
@@ -19,7 +23,7 @@ namespace NuClear.ValidationRules.Import.Extractors.FlowFinancialData
                     {
                         Id = profile.Code,
                         LegalPersonId = legalEntity.Code,
-                        IsDeleted = profile.IsHidden,
+                        IsDeleted = legalEntity.IsDeleted || legalEntity.IsHidden || profile.IsHidden,
                     };
 
                     switch (ExtractWarrantyOrBargain(profile.Item))
@@ -33,6 +37,14 @@ namespace NuClear.ValidationRules.Import.Extractors.FlowFinancialData
                     }
 
                     yield return x;
+
+                    yield return new EntityName
+                    {
+                        Id = profile.Code,
+                        EntityType = 219,
+                        Name = profile.Name,
+                        IsDeleted = legalEntity.IsDeleted || legalEntity.IsHidden || profile.IsHidden,
+                    };
                 }
             }
 

@@ -7,9 +7,18 @@ namespace NuClear.ValidationRules.Import.Extractors.FlowNomenclatures
     {
         protected override IEnumerable<object> Extract(NomenclatureCategory nomenclatureCategory)
         {
+            yield return new Model.PersistentFacts.EntityName
+            {
+                Id = nomenclatureCategory.Code,
+                EntityType = 285,
+                Name = nomenclatureCategory.Name,
+                IsDeleted = nomenclatureCategory.IsDeleted,
+            };
+
             yield return new Model.PersistentFacts.NomenclatureCategory
             {
                 Id = nomenclatureCategory.Code,
+                IsDeleted = nomenclatureCategory.IsDeleted,
             };
         }
     }
