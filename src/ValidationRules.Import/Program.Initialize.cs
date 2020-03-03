@@ -54,6 +54,8 @@ namespace NuClear.ValidationRules.Import
                 dataConnection.DropTable<NomenclatureCategory>(throwExceptionIfNotExists: false);
                 dataConnection.DropTable<Position>(throwExceptionIfNotExists: false);
                 dataConnection.DropTable<PositionChild>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<Price>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<PricePosition>(throwExceptionIfNotExists: false);
                 dataConnection.DropTable<SalesModelCategoryRestriction>(throwExceptionIfNotExists: false);
 
                 dataConnection.CreateTable<Account>();
@@ -66,6 +68,8 @@ namespace NuClear.ValidationRules.Import
                 dataConnection.CreateTable<NomenclatureCategory>();
                 dataConnection.CreateTable<Position>();
                 dataConnection.CreateTable<PositionChild>();
+                dataConnection.CreateTable<Price>();
+                dataConnection.CreateTable<PricePosition>();
                 dataConnection.CreateTable<SalesModelCategoryRestriction>();
 
                 // ??

@@ -1,4 +1,4 @@
-namespace NuClear.ValidationRules.Import.Model.Facts
+namespace NuClear.ValidationRules.Import.Model.PersistentFacts
 {
     public sealed class PricePosition
     {

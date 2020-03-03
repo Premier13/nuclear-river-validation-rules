@@ -16,9 +16,6 @@ namespace NuClear.ValidationRules.Import.Processing
             builder.Entity<OrderPositionAdvertisement>()
                 .HasSchemaName(FactsSchema);
 
-            builder.Entity<PricePosition>()
-                .HasSchemaName(FactsSchema);
-
             builder.Entity<QuantitativeRule>()
                 .HasSchemaName(FactsSchema);
 

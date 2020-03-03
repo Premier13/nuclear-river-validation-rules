@@ -7,6 +7,7 @@ using NuClear.ValidationRules.Import.Extractors;
 using NuClear.ValidationRules.Import.Extractors.FlowAdvModelsInfo;
 using NuClear.ValidationRules.Import.Extractors.FlowFinancialData;
 using NuClear.ValidationRules.Import.Extractors.FlowNomenclatures;
+using NuClear.ValidationRules.Import.Extractors.FlowPriceLists;
 using NuClear.ValidationRules.Import.Model.Service;
 using NuClear.ValidationRules.Import.Processing;
 using NuClear.ValidationRules.Import.Relations;
@@ -26,6 +27,7 @@ namespace NuClear.ValidationRules.Import
                 new LegalUnitExtractor(),
                 new NomenclatureCategoryExtractor(),
                 new NomenclatureElementExtractor(),
+                new PriceListExtractor(),
             }),
         };
 
@@ -44,6 +46,8 @@ namespace NuClear.ValidationRules.Import
             new NomenclatureCategoryConfiguration(),
             new PositionChildConfiguration(),
             new PositionConfiguration(),
+            new PriceConfiguration(),
+            new PricePositionConfiguration(),
             new SalesModelCategoryRestrictionConfiguration(),
         };
 
