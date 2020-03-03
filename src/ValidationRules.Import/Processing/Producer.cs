@@ -1,25 +1,20 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using NuClear.ValidationRules.Import.Relations;
 
 namespace NuClear.ValidationRules.Import.Processing
 {
     public sealed class Producer
     {
-        private static readonly int MaxCacheSize = 100000;
-        private static readonly TimeSpan MaxCacheAge = TimeSpan.FromSeconds(10);
-
         private readonly Cache _cache;
         private readonly Writer _writer;
         private readonly Task _backgroundTask;
         private readonly CancellationTokenSource _backgroundTaskCancellation;
         private readonly AutoResetEvent _cacheConsumed;
 
-        private Producer(Cache cache, Writer writer)
+        public Producer(Cache cache, Writer writer)
         {
             _cache = cache;
             _writer = writer;
@@ -29,24 +24,7 @@ namespace NuClear.ValidationRules.Import.Processing
             _backgroundTask = new Task(
                 () => FlushLoop(_backgroundTaskCancellation.Token),
                 _backgroundTaskCancellation.Token);
-        }
-
-        public static Producer Create(
-            DataConnectionFactory dataConnectionFactory,
-            IReadOnlyCollection<IEntityConfiguration> configurations)
-        {
-            var cache = new Cache(MaxCacheSize, MaxCacheAge);
-            var dataWriter = new Writer(dataConnectionFactory);
-
-            foreach (var configuration in configurations)
-            {
-                configuration.Apply(cache);
-                configuration.Apply(dataWriter);
-            }
-
-            var producer = new Producer(cache, dataWriter);
-            producer._backgroundTask.Start();
-            return producer;
+            _backgroundTask.Start();
         }
 
         public void InsertOrUpdate(IEnumerable entities)

@@ -7,7 +7,7 @@ using NuClear.ValidationRules.Import.Extractors;
 
 namespace NuClear.ValidationRules.Import.Processing
 {
-    public sealed class Consumer
+    public static class ConsumerFactory
     {
         public static IConsumer<Ignore, IEnumerable<object>> Create(
             string brokers,

@@ -22,15 +22,17 @@ namespace NuClear.ValidationRules.Import.Processing
 
         private readonly DataConnectionFactory _dataConnectionFactory;
         private readonly IDictionary<Type, IEntityWriter> _writerByEntityType;
+        private readonly bool _ignoreRelations;
 
-        public Writer(DataConnectionFactory dataConnectionFactory)
+        public Writer(DataConnectionFactory dataConnectionFactory, bool ignoreRelations)
         {
             _dataConnectionFactory = dataConnectionFactory;
             _writerByEntityType = new Dictionary<Type, IEntityWriter>();
+            _ignoreRelations = ignoreRelations;
         }
 
-        public FluentBuilder<TValue> Entity<TValue>() where TValue: class
-            => new FluentBuilder<TValue>(this);
+        public FluentBuilder<TValue> Entity<TValue>() where TValue : class
+            => new FluentBuilder<TValue>(this, _ignoreRelations);
 
         public void Write(IReadOnlyDictionary<Type, ICollection> data, CancellationToken token)
         {
@@ -42,7 +44,7 @@ namespace NuClear.ValidationRules.Import.Processing
                 using var dataConnection = _dataConnectionFactory.Create();
                 foreach (var (key, value) in data)
                 {
-                    if(value.Count == 0)
+                    if (value.Count == 0)
                         continue;
 
                     if (!_writerByEntityType.TryGetValue(key, out var writer))
@@ -95,24 +97,32 @@ namespace NuClear.ValidationRules.Import.Processing
             }));
         }
 
-        public class FluentBuilder<TValue> where TValue: class
+        public class FluentBuilder<TValue> where TValue : class
         {
             private readonly Writer _writer;
+            private readonly bool _ignoreRelationsProvider;
             private readonly IRelationProvider<TValue> _provider;
 
-            public FluentBuilder(Writer writer)
-                => _writer = writer;
+            public FluentBuilder(Writer writer, bool ignoreRelationsProvider)
+            {
+                _writer = writer;
+                _ignoreRelationsProvider = ignoreRelationsProvider;
+            }
 
-            private FluentBuilder(Writer writer, IRelationProvider<TValue> provider)
-                => (_writer, _provider) = (writer, provider);
+            private FluentBuilder(Writer writer, bool ignoreRelationsProvider, IRelationProvider<TValue> provider)
+                => (_writer, _ignoreRelationsProvider, _provider) = (writer, ignoreRelationsProvider, provider);
 
             public FluentBuilder<TValue> HasRelationsProvider(IRelationProvider<TValue> provider)
-                => new FluentBuilder<TValue>(_writer, provider);
+                => new FluentBuilder<TValue>(_writer, _ignoreRelationsProvider, provider);
 
             public void HasKey<TKey>(Expression<Func<TValue, TKey>> keyExpression)
-                => _writer.Configure(
-                    _provider ?? throw new InvalidOperationException($"Method {nameof(HasRelationsProvider)} must be called first."),
-                    keyExpression);
+            {
+                var provider = _ignoreRelationsProvider
+                    ? null
+                    : (_provider ?? throw new InvalidOperationException($"Relations provider must be set."));
+
+                _writer.Configure(provider, keyExpression);
+            }
         }
 
         private interface IEntityWriter
@@ -159,7 +169,8 @@ namespace NuClear.ValidationRules.Import.Processing
                     .InsertWhenNotMatched();
 
                 if (IsDeletable())
-                    mergeCommand = mergeCommand.DeleteWhenMatchedAnd((target, source) => ((IDeletable) source).IsDeleted);
+                    mergeCommand =
+                        mergeCommand.DeleteWhenMatchedAnd((target, source) => ((IDeletable) source).IsDeleted);
 
                 // todo: что-то такое может потребоваться, если в потоке будут снимки состояния, не включающие удалённые объекты (т.е. нам самим придётся понимать, что удалено)
                 // .DeleteWhenNotMatchedBySourceAnd(x => tempTable.Contains(y => x.AggregateId == y.AggregateId))
@@ -177,6 +188,9 @@ namespace NuClear.ValidationRules.Import.Processing
                 DataConnection dataConnection,
                 IQueryable<TEntity> updated)
             {
+                if (_relationProvider == null)
+                    return Array.Empty<RelationRecord>();
+
                 // todo: здесь нет определения записей, которые изменились реально.
                 //       это можно добавить отдельными запросами, оно несколько утяжелит обработку потока.
                 //       а вообще ждём в третьей версии фичу 'output': https://github.com/linq2db/linq2db/pull/1703

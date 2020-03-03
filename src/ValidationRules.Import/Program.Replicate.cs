@@ -51,17 +51,16 @@ namespace NuClear.ValidationRules.Import
             string brokers,
             string[] topic,
             string[] kafka,
+            bool skipRelations,
             CancellationToken token)
         {
-            // разрешаем update на таблицу состоящую только из Primary Keys
-            LinqToDB.Common.Configuration.Linq.IgnoreEmptyUpdate = true;
-
             try
             {
                 var dataConnectionFactory = new DataConnectionFactory(database, Configurations);
-                var partitionManager = new PartitionManager(dataConnectionFactory, Configurations);
+                var producerFactory = new ProducerFactory(dataConnectionFactory, Configurations, skipRelations);
+                var partitionManager = new PartitionManager(dataConnectionFactory, producerFactory);
                 var pollTimeout = TimeSpan.FromMilliseconds(100);
-                var consumer = Consumer.Create(
+                var consumer = ConsumerFactory.Create(
                     brokers,
                     kafka ?? Array.Empty<string>(),
                     FactExtractors,
@@ -108,9 +107,10 @@ namespace NuClear.ValidationRules.Import
                 new Option("--brokers", "Kafka brokers (eg 'foo:9092,bar:6062'") {Argument = new Argument<string>()},
                 new Option("--topic", "Topic to subscribe") {Argument = new Argument<string[]>()},
                 new Option("--kafka", "Set librdkafka configuration property") {Argument = new Argument<string[]>()},
+                new Option("--skip-relations", "Skip relation events producing") {Argument = new Argument<bool>(() => false)},
             };
             command.Handler =
-                CommandHandler.Create<string, string, string[], string[], CancellationToken>(Replicate);
+                CommandHandler.Create<string, string, string[], string[], bool, CancellationToken>(Replicate);
 
             return command;
         }

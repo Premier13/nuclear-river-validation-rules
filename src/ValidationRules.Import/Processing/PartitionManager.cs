@@ -11,35 +11,38 @@ namespace NuClear.ValidationRules.Import.Processing
     public class PartitionManager
     {
         private readonly DataConnectionFactory _dataConnectionFactory;
-        private readonly IReadOnlyCollection<IEntityConfiguration> _configurations;
+        private readonly ProducerFactory _producerFactory;
         private readonly IDictionary<TopicPartition, Producer> _producers;
 
-        public PartitionManager(DataConnectionFactory dataConnectionFactory, IReadOnlyCollection<IEntityConfiguration> configurations)
+        public PartitionManager(
+            DataConnectionFactory dataConnectionFactory,
+            ProducerFactory producerFactory)
         {
             _dataConnectionFactory = dataConnectionFactory;
-            _configurations = configurations;
+            _producerFactory = producerFactory;
             _producers = new Dictionary<TopicPartition, Producer>();
         }
 
         public Producer this[TopicPartition topicPartition]
             => _producers[topicPartition];
 
-        public IEnumerable<TopicPartitionOffset> OnPartitionAssigned(IReadOnlyCollection<TopicPartition> topicPartitions)
+        public IEnumerable<TopicPartitionOffset> OnPartitionAssigned(
+            IReadOnlyCollection<TopicPartition> topicPartitions)
         {
             using var connection = _dataConnectionFactory.Create();
 
             var temp = connection.CreateTable<ConsumerState>("#ConsumerState");
             temp.BulkCopy(topicPartitions.Select(x => new ConsumerState {Topic = x.Topic, Partition = x.Partition}));
             var states = connection.GetTable<ConsumerState>()
-                .Join(temp, x => new {x.Topic, x.Partition}, x => new {x.Topic, x.Partition}, (storedState, _) => storedState)
+                .Join(temp, x => new {x.Topic, x.Partition}, x => new {x.Topic, x.Partition},
+                    (storedState, _) => storedState)
                 .ToDictionary(x => new TopicPartition(x.Topic, x.Partition), x => x.Offset);
 
             var result = new List<TopicPartitionOffset>(topicPartitions.Count);
 
             foreach (var topicPartition in topicPartitions)
             {
-                _producers[topicPartition] =
-                    Producer.Create(_dataConnectionFactory, _configurations);
+                _producers[topicPartition] = _producerFactory.Create();
 
                 var tpo = states.TryGetValue(topicPartition, out var offset)
                     ? new TopicPartitionOffset(topicPartition, offset)
