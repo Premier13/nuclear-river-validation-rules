@@ -11,27 +11,24 @@ namespace NuClear.ValidationRules.Import.Processing
 
         private readonly DataConnectionFactory _dataConnectionFactory;
         private readonly IReadOnlyCollection<IEntityConfiguration> _configurations;
-        private readonly bool _ignoreRelations;
+        private readonly bool _enableRelations;
 
-        public ProducerFactory(DataConnectionFactory dataConnectionFactory, IReadOnlyCollection<IEntityConfiguration> configurations, bool ignoreRelations)
+        public ProducerFactory(DataConnectionFactory dataConnectionFactory, IReadOnlyCollection<IEntityConfiguration> configurations, bool enableRelations)
         {
             _dataConnectionFactory = dataConnectionFactory;
             _configurations = configurations;
-            _ignoreRelations = ignoreRelations;
+            _enableRelations = enableRelations;
         }
 
         public Producer Create()
         {
-            var cache = new Cache(MaxCacheSize, MaxCacheAge);
-            var dataWriter = new Writer(_dataConnectionFactory, _ignoreRelations);
+            var cache = new Cache(MaxCacheSize);
+            var saver = new CacheSaver(_dataConnectionFactory);
 
             foreach (var configuration in _configurations)
-            {
-                configuration.Apply(cache);
-                configuration.Apply(dataWriter);
-            }
+                configuration.Apply(saver, _enableRelations);
 
-            return new Producer(cache, dataWriter);
+            return new Producer(cache, saver, MaxCacheAge);
         }
     }
 }

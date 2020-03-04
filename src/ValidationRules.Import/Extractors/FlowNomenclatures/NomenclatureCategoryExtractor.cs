@@ -12,7 +12,6 @@ namespace NuClear.ValidationRules.Import.Extractors.FlowNomenclatures
                 Id = nomenclatureCategory.Code,
                 EntityType = 285,
                 Name = nomenclatureCategory.Name,
-                IsDeleted = nomenclatureCategory.IsDeleted,
             };
 
             yield return new Model.PersistentFacts.NomenclatureCategory

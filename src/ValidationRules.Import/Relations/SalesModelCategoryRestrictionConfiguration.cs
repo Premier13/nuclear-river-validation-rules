@@ -10,18 +10,14 @@ namespace NuClear.ValidationRules.Import.Relations
     public sealed class SalesModelCategoryRestrictionConfiguration : IEntityConfiguration,
         IRelationProvider<SalesModelCategoryRestriction>
     {
-        public void Apply(Cache cache)
-            => cache.Entity<SalesModelCategoryRestriction>()
-                .HasKey(x => new {x.ProjectId, x.Start, x.CategoryId});
-
         public void Apply(FluentMappingBuilder builder)
             => builder.Entity<SalesModelCategoryRestriction>()
                 .HasSchemaName(Schema.PersistentFactsSchema)
                 .HasPrimaryKey(x => new {x.ProjectId, x.Start, x.CategoryId});
 
-        public void Apply(Writer writer)
-            => writer.Entity<SalesModelCategoryRestriction>()
-                .HasRelationsProvider(this)
+        public void Apply(CacheSaver cacheSaver, bool enableRelations)
+            => cacheSaver.Entity<SalesModelCategoryRestriction>()
+                .HasRelationsProvider(enableRelations ? this : null)
                 .HasKey(x => new {x.ProjectId, x.Start, x.CategoryId});
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,

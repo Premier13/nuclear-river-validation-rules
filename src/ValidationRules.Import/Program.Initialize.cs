@@ -48,6 +48,8 @@ namespace NuClear.ValidationRules.Import
                 dataConnection.DropTable<AccountDetail>(throwExceptionIfNotExists: false);
                 dataConnection.DropTable<BranchOffice>(throwExceptionIfNotExists: false);
                 dataConnection.DropTable<BranchOfficeOrganizationUnit>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<Category>(throwExceptionIfNotExists: false);
+                dataConnection.DropTable<CategoryProject>(throwExceptionIfNotExists: false);
                 dataConnection.DropTable<CostPerClickCategoryRestriction>(throwExceptionIfNotExists: false);
                 dataConnection.DropTable<LegalPerson>(throwExceptionIfNotExists: false);
                 dataConnection.DropTable<LegalPersonProfile>(throwExceptionIfNotExists: false);
@@ -62,6 +64,8 @@ namespace NuClear.ValidationRules.Import
                 dataConnection.CreateTable<AccountDetail>();
                 dataConnection.CreateTable<BranchOffice>();
                 dataConnection.CreateTable<BranchOfficeOrganizationUnit>();
+                dataConnection.CreateTable<Category>();
+                dataConnection.CreateTable<CategoryProject>();
                 dataConnection.CreateTable<CostPerClickCategoryRestriction>();
                 dataConnection.CreateTable<LegalPerson>();
                 dataConnection.CreateTable<LegalPersonProfile>();

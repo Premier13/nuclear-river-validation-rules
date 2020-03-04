@@ -1,43 +1,52 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using NuClear.ValidationRules.Import.Relations;
 
 namespace NuClear.ValidationRules.Import.Processing
 {
     public sealed class Cache
     {
-        private readonly int _cacheSize;
-        private readonly TimeSpan _maxAge;
+        private readonly int _maxCount;
         private readonly IDictionary<Type, IEntityCache> _cacheByEntityType;
-        private DateTime _lastConsumed;
+        private readonly AutoResetEvent _cacheConsumed;
+        private int _count;
 
-        public Cache(int cacheSize, TimeSpan maxAge)
+        public Cache(int maxCount)
         {
-            _cacheSize = cacheSize;
-            _maxAge = maxAge;
-            _cacheByEntityType = new Dictionary<Type, IEntityCache>(cacheSize);
-            _lastConsumed = DateTime.UtcNow;
+            _maxCount = maxCount;
+            _cacheConsumed = new AutoResetEvent(false);
+            _cacheByEntityType = new Dictionary<Type, IEntityCache>(50);
+            _count = 0;
         }
 
-        public FluentBuilder<TEntity> Entity<TEntity>() where TEntity : class => new FluentBuilder<TEntity>(this);
+        public bool HasEnoughData => _count > _maxCount;
 
         public void InsertOrUpdate(IEnumerable entities)
         {
+            // Если кеш заполнен, ждём пока данные оттуда заберут.
+            // Ждём ограниченное время, лучше превысить размер, чем завесить основной поток.
+            if (HasEnoughData)
+            {
+                var throttlingTimer = Stopwatch.StartNew();
+                _cacheConsumed.WaitOne(TimeSpan.FromSeconds(10));
+                throttlingTimer.Stop();
+                Log.Warn("Consume throttling", new {Time = throttlingTimer.Elapsed});
+            }
+
             lock (_cacheByEntityType)
             {
                 foreach (var entity in entities)
-                    _cacheByEntityType[entity.GetType()].InsertOrUpdate(entity);
-            }
-        }
-
-        public bool ConsumeRequired()
-        {
-            lock (_cacheByEntityType)
-            {
-                return _cacheByEntityType.Values.Sum(x => x.Count) > _cacheSize || (DateTime.UtcNow - _lastConsumed) > _maxAge;
+                {
+                    if (!_cacheByEntityType.TryGetValue(entity.GetType(), out var cache))
+                        _cacheByEntityType.Add(entity.GetType(), cache = CreateCache(entity.GetType()));
+                    cache.InsertOrUpdate(entity);
+                    _count++;
+                }
             }
         }
 
@@ -45,66 +54,41 @@ namespace NuClear.ValidationRules.Import.Processing
         {
             lock (_cacheByEntityType)
             {
-                _lastConsumed = DateTime.UtcNow;
+                _count = 0;
                 return _cacheByEntityType.ToDictionary(x => x.Key, x => x.Value.Consume());
             }
         }
 
-        private void Configure<TEntity, TKey>(Expression<Func<TEntity, TKey>> keyExpression) where TEntity : class
+        public void Entity<TEntity>() where TEntity : class
         {
-            // в принципе, ключ в кеше нужен только для дедупликации объектов в памяти, в процессе потребения их из потока между записями в базу.
-            // сейчас код, записывающий изменения (BulkCopy) полагается на отсутствие дублей.
-            // с другой стороны можно перенести дедупликацию туда (это будет отчасти даже правильно) - ключ там уже есть, его добавлять не нужно.
-            // при этом из кеша этот ключ можно будет убрать вообще. но это увеличит нагрузку на память.
-            lock (_cacheByEntityType)
-            {
-                _cacheByEntityType[typeof(TEntity)] = new EntityCache<TKey, TEntity>(keyExpression);
-            }
         }
 
-        public sealed class FluentBuilder<TEntity> where TEntity : class
-        {
-            private readonly Cache _cache;
-
-            public FluentBuilder(Cache cache)
-                => _cache = cache;
-
-            public void HasKey<TKey>(Expression<Func<TEntity, TKey>> keyExpression)
-            {
-                _cache.Configure(keyExpression);
-            }
-        }
+        private static IEntityCache CreateCache(Type type)
+            => (IEntityCache)Activator.CreateInstance(typeof(EntityCache<>).MakeGenericType(type));
 
         private interface IEntityCache
         {
-            int Count { get; }
             void InsertOrUpdate(object entity);
             ICollection Consume();
         }
 
-        private sealed class EntityCache<TKey, TValue> : IEntityCache where TValue : class
+        private sealed class EntityCache<TValue> : IEntityCache where TValue : class
         {
-            private readonly IDictionary<TKey, TValue> _data;
-            private readonly Func<TValue, TKey> _keyFunction;
+            private List<TValue> _data;
 
-            public EntityCache(Expression<Func<TValue, TKey>> keyExpression)
+            public EntityCache()
             {
-                _keyFunction = keyExpression.Compile();
-                _data = new Dictionary<TKey, TValue>(EqualityComparer<TKey>.Default);
+                _data = new List<TValue>();
             }
 
-            public int Count => _data.Count;
-
             public void InsertOrUpdate(object entity)
-                => InsertOrUpdate((TValue) entity);
-
-            private void InsertOrUpdate(TValue entity)
-                => _data[_keyFunction.Invoke(entity)] = entity;
+                => _data.Add((TValue)entity);
 
             public ICollection Consume()
             {
-                var values = new List<TValue>(_data.Values);
-                _data.Clear();
+                // Блокировка не требуется, она есть выше по стеку.
+                var values = _data;
+                _data = new List<TValue>();
                 return values;
             }
         }

@@ -10,18 +10,14 @@ namespace NuClear.ValidationRules.Import.Relations
     public sealed class CostPerClickCategoryRestrictionConfiguration : IEntityConfiguration,
         IRelationProvider<CostPerClickCategoryRestriction>
     {
-        public void Apply(Cache cache)
-            => cache.Entity<CostPerClickCategoryRestriction>()
-                .HasKey(x => new {x.ProjectId, x.Start, x.CategoryId});
-
         public void Apply(FluentMappingBuilder builder)
             => builder.Entity<CostPerClickCategoryRestriction>()
                 .HasSchemaName(Schema.PersistentFactsSchema)
                 .HasPrimaryKey(x => new {x.ProjectId, x.Start, x.CategoryId});
 
-        public void Apply(Writer writer)
-            => writer.Entity<CostPerClickCategoryRestriction>()
-                .HasRelationsProvider(this)
+        public void Apply(CacheSaver cacheSaver, bool enableRelations)
+            => cacheSaver.Entity<CostPerClickCategoryRestriction>()
+                .HasRelationsProvider(enableRelations ? this : null)
                 .HasKey(x => new {x.ProjectId, x.Start, x.CategoryId});
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,

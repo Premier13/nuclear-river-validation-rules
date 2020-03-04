@@ -11,18 +11,14 @@ namespace NuClear.ValidationRules.Import.Relations
 {
     public sealed class LegalPersonProfileConfiguration : IEntityConfiguration, IRelationProvider<LegalPersonProfile>
     {
-        public void Apply(Cache cache)
-            => cache.Entity<LegalPersonProfile>()
-                .HasKey(x => x.Id);
-
         public void Apply(FluentMappingBuilder builder)
             => builder.Entity<LegalPersonProfile>()
                 .HasSchemaName(Schema.PersistentFactsSchema)
                 .HasPrimaryKey(x => x.Id);
 
-        public void Apply(Writer writer)
-            => writer.Entity<LegalPersonProfile>()
-                .HasRelationsProvider(this)
+        public void Apply(CacheSaver cacheSaver, bool enableRelations)
+            => cacheSaver.Entity<LegalPersonProfile>()
+                .HasRelationsProvider(enableRelations ? this : null)
                 .HasKey(x => x.Id);
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,

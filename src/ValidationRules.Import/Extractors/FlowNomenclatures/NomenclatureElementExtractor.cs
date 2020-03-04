@@ -31,7 +31,6 @@ namespace NuClear.ValidationRules.Import.Extractors.FlowNomenclatures
                     EntityType = 153,
                     Name = country.Localizations.First().Name,
                     TenantId = CountryCodeToTenant[country.CountryCode],
-                    IsDeleted = nomenclatureElement.IsDeleted,
                 };
             }
 

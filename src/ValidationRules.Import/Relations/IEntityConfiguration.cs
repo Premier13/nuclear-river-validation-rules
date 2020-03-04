@@ -8,9 +8,8 @@ namespace NuClear.ValidationRules.Import.Relations
 {
     public interface IEntityConfiguration
     {
-        void Apply(Cache cache);
         void Apply(FluentMappingBuilder builder);
-        void Apply(Writer writer);
+        void Apply(CacheSaver cacheSaver, bool enableRelations);
     }
 
     public interface IRelationProvider<T>

@@ -43,7 +43,6 @@ namespace NuClear.ValidationRules.Import.Extractors.FlowFinancialData
                         Id = profile.Code,
                         EntityType = 219,
                         Name = profile.Name,
-                        IsDeleted = legalEntity.IsDeleted || legalEntity.IsHidden || profile.IsHidden,
                     };
                 }
             }

@@ -10,18 +10,14 @@ namespace NuClear.ValidationRules.Import.Relations
 {
     public sealed class ConsumerStateConfiguration : IEntityConfiguration, IRelationProvider<ConsumerState>
     {
-        public void Apply(Cache cache)
-            => cache.Entity<ConsumerState>()
-                .HasKey(x => new {x.Topic, x.Partition});
-
         public void Apply(FluentMappingBuilder builder)
             => builder.Entity<ConsumerState>()
                 .HasSchemaName(Schema.ServiceSchema)
                 .HasPrimaryKey(x => new {x.Topic, x.Partition});
 
-        public void Apply(Writer writer)
-            => writer.Entity<ConsumerState>()
-                .HasRelationsProvider(this)
+        public void Apply(CacheSaver cacheSaver, bool enableRelations)
+            => cacheSaver.Entity<ConsumerState>()
+                .HasRelationsProvider(enableRelations ? this : null)
                 .HasKey(x => new {x.Topic, x.Partition});
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<ConsumerState> actual, IQueryable<ConsumerState> outdated)

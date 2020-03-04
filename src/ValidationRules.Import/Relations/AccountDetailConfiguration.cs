@@ -9,18 +9,14 @@ namespace NuClear.ValidationRules.Import.Relations
 {
     public sealed class AccountDetailConfiguration : IEntityConfiguration, IRelationProvider<AccountDetail>
     {
-        public void Apply(Cache cache)
-            => cache.Entity<AccountDetail>()
-                .HasKey(x => x.Id);
-
         public void Apply(FluentMappingBuilder builder)
             => builder.Entity<AccountDetail>()
                 .HasSchemaName(Schema.PersistentFactsSchema)
                 .HasPrimaryKey(x => x.Id);
 
-        public void Apply(Writer writer)
-            => writer.Entity<AccountDetail>()
-                .HasRelationsProvider(this)
+        public void Apply(CacheSaver cacheSaver, bool enableRelations)
+            => cacheSaver.Entity<AccountDetail>()
+                .HasRelationsProvider(enableRelations ? this : null)
                 .HasKey(x => x.Id);
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection, IQueryable<AccountDetail> actual, IQueryable<AccountDetail> outdated)

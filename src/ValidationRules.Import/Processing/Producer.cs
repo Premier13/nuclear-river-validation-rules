@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,17 +7,21 @@ namespace NuClear.ValidationRules.Import.Processing
 {
     public sealed class Producer
     {
+        private readonly TimeSpan _flushInterval;
+
         private readonly Cache _cache;
-        private readonly Writer _writer;
+        private readonly CacheSaver _cacheSaver;
         private readonly Task _backgroundTask;
         private readonly CancellationTokenSource _backgroundTaskCancellation;
-        private readonly AutoResetEvent _cacheConsumed;
 
-        public Producer(Cache cache, Writer writer)
+        private DateTime _lastConsumed;
+
+        public Producer(Cache cache, CacheSaver cacheSaver, TimeSpan flushInterval)
         {
             _cache = cache;
-            _writer = writer;
-            _cacheConsumed = new AutoResetEvent(false);
+            _cacheSaver = cacheSaver;
+            _lastConsumed = DateTime.UtcNow;
+            _flushInterval = flushInterval;
 
             _backgroundTaskCancellation = new CancellationTokenSource();
             _backgroundTask = new Task(
@@ -33,16 +36,6 @@ namespace NuClear.ValidationRules.Import.Processing
                 return;
 
             _cache.InsertOrUpdate(entities);
-
-            // Если кеш заполнен, ждём пока данные оттуда заберут.
-            // Ждём ограниченное время, лучше превысить размер, чем завесить основной поток.
-            if (_cache.ConsumeRequired())
-            {
-                var throttlingTimer = Stopwatch.StartNew();
-                _cacheConsumed.WaitOne(TimeSpan.FromSeconds(10));
-                throttlingTimer.Stop();
-                Log.Warn("Producer throttling", new {Time = throttlingTimer.Elapsed});
-            }
         }
 
         public void ThrowIfBackgroundFailed()
@@ -56,11 +49,11 @@ namespace NuClear.ValidationRules.Import.Processing
             while (!token.IsCancellationRequested)
             {
                 Thread.Sleep(100);
-                if (_cache.ConsumeRequired())
+                if (_cache.HasEnoughData || (_lastConsumed + _flushInterval) > DateTime.UtcNow)
                 {
                     var data = _cache.Consume();
-                    _cacheConsumed.Set();
-                    _writer.Write(data, token);
+                    _lastConsumed = DateTime.UtcNow;
+                    _cacheSaver.Write(data, token);
                 }
             }
         }

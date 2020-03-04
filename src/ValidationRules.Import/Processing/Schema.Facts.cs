@@ -10,6 +10,9 @@ namespace NuClear.ValidationRules.Import.Processing
             builder.Entity<OrderConsistency>()
                 .HasSchemaName(FactsSchema);
 
+            builder.Entity<Order>()
+                .HasSchemaName(FactsSchema);
+
             builder.Entity<OrderPosition>()
                 .HasSchemaName(FactsSchema);
 

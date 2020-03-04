@@ -6,6 +6,7 @@ using System.Threading;
 using NuClear.ValidationRules.Import.Extractors;
 using NuClear.ValidationRules.Import.Extractors.FlowAdvModelsInfo;
 using NuClear.ValidationRules.Import.Extractors.FlowFinancialData;
+using NuClear.ValidationRules.Import.Extractors.FlowKaleidoscope;
 using NuClear.ValidationRules.Import.Extractors.FlowNomenclatures;
 using NuClear.ValidationRules.Import.Extractors.FlowPriceLists;
 using NuClear.ValidationRules.Import.Model.Service;
@@ -28,6 +29,9 @@ namespace NuClear.ValidationRules.Import
                 new NomenclatureCategoryExtractor(),
                 new NomenclatureElementExtractor(),
                 new PriceListExtractor(),
+                new CategoryExtractor(),
+                new SecondRubricExtractor(),
+                new RubricExtractor(),
             }),
         };
 
@@ -39,6 +43,7 @@ namespace NuClear.ValidationRules.Import
             new AccountDetailConfiguration(),
             new BranchOfficeOrganizationUnitConfiguration(),
             new BranchOfficeConfiguration(),
+            new CategoryConfiguration(),
             new CostPerClickCategoryRestrictionConfiguration(),
             new EntityNameConfiguration(),
             new LegalPersonConfiguration(),
@@ -56,13 +61,13 @@ namespace NuClear.ValidationRules.Import
             string brokers,
             string[] topic,
             string[] kafka,
-            bool skipRelations,
+            bool enableRelations,
             CancellationToken token)
         {
             try
             {
                 var dataConnectionFactory = new DataConnectionFactory(database, Configurations);
-                var producerFactory = new ProducerFactory(dataConnectionFactory, Configurations, skipRelations);
+                var producerFactory = new ProducerFactory(dataConnectionFactory, Configurations, enableRelations);
                 var partitionManager = new PartitionManager(dataConnectionFactory, producerFactory);
                 var pollTimeout = TimeSpan.FromMilliseconds(100);
                 var consumer = ConsumerFactory.Create(
@@ -112,7 +117,7 @@ namespace NuClear.ValidationRules.Import
                 new Option("--brokers", "Kafka brokers (eg 'foo:9092,bar:6062'") {Argument = new Argument<string>()},
                 new Option("--topic", "Topic to subscribe") {Argument = new Argument<string[]>()},
                 new Option("--kafka", "Set librdkafka configuration property") {Argument = new Argument<string[]>()},
-                new Option("--skip-relations", "Skip relation events producing") {Argument = new Argument<bool>(() => false)},
+                new Option("--enable-relations", "Skip relation events producing") {Argument = new Argument<bool>(() => false)},
             };
             command.Handler =
                 CommandHandler.Create<string, string, string[], string[], bool, CancellationToken>(Replicate);
