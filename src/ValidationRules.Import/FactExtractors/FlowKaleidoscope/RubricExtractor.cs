@@ -15,7 +15,7 @@ namespace NuClear.ValidationRules.Import.FactExtractors.FlowKaleidoscope
             {
                 yield return new PersistentFacts.Category {Id = rubric.Code, IsDeleted = true};
                 yield return Group.Create(
-                    new {CategoryId = rubric.Code},
+                    new {CategoryId = (long) rubric.Code},
                     Array.Empty<PersistentFacts.CategoryProject>());
             }
             else
@@ -35,9 +35,10 @@ namespace NuClear.ValidationRules.Import.FactExtractors.FlowKaleidoscope
                 yield return new PersistentFacts.Category
                     {Id = rubric.Code, L2Id = rubric.SecondRubricCode, L3Id = rubric.Code};
 
+                var groups = rubric.Groups ?? Array.Empty<BranchesGroup>();
                 yield return Group.Create(
-                    new {CategoryId = rubric.Code},
-                    rubric.Groups.SelectMany(x => x.Branches ?? Array.Empty<BranchesGroupBranch>())
+                    new {CategoryId = (long) rubric.Code},
+                    groups.SelectMany(x => x.Branches ?? Array.Empty<BranchesGroupBranch>())
                         .Select(x => new PersistentFacts.CategoryProject {CategoryId = rubric.Code, ProjectId = x.Code})
                         .ToList());
             }

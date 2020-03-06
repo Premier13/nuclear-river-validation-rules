@@ -10,7 +10,7 @@ namespace NuClear.ValidationRules.Import
 
         public static void Debug(string template, object arg)
         {
-            //Write("Debug", template, arg);
+            Write("Debug", template, arg);
         }
 
         public static void Info(string template, object arg)

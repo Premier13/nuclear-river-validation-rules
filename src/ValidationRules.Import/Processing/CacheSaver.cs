@@ -38,6 +38,7 @@ namespace NuClear.ValidationRules.Import.Processing
             lock (_writerByEntityType)
             {
                 var allRelations = new HashSet<RelationRecord>(10000, new RelationRecord.EqualityComparer());
+                var summary = new Dictionary<string, int>();
 
                 using var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionOptions);
                 using var dataConnection = _dataConnectionFactory.Create();
@@ -45,6 +46,8 @@ namespace NuClear.ValidationRules.Import.Processing
                 {
                     if (value.Count == 0)
                         continue;
+
+                    summary.Add(key.Name, value.Count);
 
                     if (!_writerByEntityType.TryGetValue(key, out var writer))
                         throw new Exception($"No relation provider for type '{key.FullName}' was added.");
@@ -69,7 +72,7 @@ namespace NuClear.ValidationRules.Import.Processing
                 WriteEvents(dataConnection, allRelations);
 
                 transaction.Complete();
-                Log.Info("Write transaction completed", new object());
+                Log.Info("Write transaction completed", summary);
             }
         }
 

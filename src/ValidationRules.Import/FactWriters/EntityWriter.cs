@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -18,7 +19,7 @@ namespace NuClear.ValidationRules.Import.FactWriters
     /// </summary>
     public sealed class EntityWriter<TKey, TValue> : IEntityWriter where TValue : class
     {
-        private readonly Expression<Func<TValue,TKey>> _entityKey;
+        private readonly Expression<Func<TValue, TKey>> _entityKey;
         private readonly IRelationProvider<TValue> _relationProvider;
         private readonly IEqualityComparer<TValue> _entityComparer;
 
@@ -34,7 +35,8 @@ namespace NuClear.ValidationRules.Import.FactWriters
         public IReadOnlyCollection<RelationRecord> Write(DataConnection dataConnection, ICollection data)
             => Write(dataConnection, (IReadOnlyCollection<TValue>) data);
 
-        private IReadOnlyCollection<RelationRecord> Write(DataConnection dataConnection, IReadOnlyCollection<TValue> data)
+        private IReadOnlyCollection<RelationRecord> Write(DataConnection dataConnection,
+            IReadOnlyCollection<TValue> data)
         {
             var deduplicatedData = Instrumentation.Do(
                 () => Deduplicate(data), "Writer deduplicate", typeof(TValue).Name);
@@ -81,20 +83,21 @@ namespace NuClear.ValidationRules.Import.FactWriters
             if (_relationProvider == null)
                 return Array.Empty<RelationRecord>();
 
+            var entityDescriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(TValue));
+
             // todo: ждём в третьей версии фичу 'output': https://github.com/linq2db/linq2db/pull/1703
             // это позволит проще определять, какие записи изменились поменялось.
-            var updated = dataConnection.GetTable<TValue>().DefaultIfEmpty()
-                .Join(actual, _entityKey, _entityKey, (stored, received) => new {stored, received})
-                .Where(x => x.stored != x.received);
-
-            Debug.WriteLine(updated.Select(x => x.received).ToString());
-            Debug.WriteLine(updated.Select(x => x.stored).ToString());
-            Debugger.Break();
+            var updated = actual
+                .LeftJoin(
+                    dataConnection.GetTable<TValue>(),
+                    ExpressionBuilder.BuildJoinCondition(entityDescriptor),
+                    (received, stored) => new Join {Received = received, Stored = stored})
+                .Where(ExpressionBuilder.BuildDifferenceCondition(entityDescriptor));
 
             var relations = _relationProvider.GetRelations(
                 dataConnection,
-                updated.Select(x => x.received),
-                updated.Select(x => x.stored));
+                updated.Select(x => x.Received),
+                updated.Select(x => x.Stored));
 
             return relations;
         }
@@ -115,6 +118,49 @@ namespace NuClear.ValidationRules.Import.FactWriters
         private bool HasUpdatableProperties(EntityDescriptor descriptor)
             => descriptor.Columns.Any(x => !x.IsIdentity && !x.IsPrimaryKey && !x.SkipOnUpdate);
 
+        private static class ExpressionBuilder
+        {
+            public static Expression<Func<Join, bool>> BuildDifferenceCondition(EntityDescriptor entityDescriptor)
+            {
+                var leftMember = typeof(Join).GetProperty(
+                    nameof(Join.Received),
+                    BindingFlags.Instance | BindingFlags.Public);
+                var rightMember = typeof(Join).GetProperty(
+                    nameof(Join.Stored),
+                    BindingFlags.Instance | BindingFlags.Public);
+
+                var p = Expression.Parameter(typeof(Join));
+                var body = entityDescriptor.Columns.Where(x => !x.IsPrimaryKey).Aggregate(
+                    (Expression) Expression.Constant(false),
+                    (expression, descriptor) => Expression.OrElse(
+                        expression,
+                        Expression.NotEqual(
+                            Expression.MakeMemberAccess(
+                                Expression.MakeMemberAccess(p, leftMember),
+                                descriptor.MemberInfo),
+                            Expression.MakeMemberAccess(
+                                Expression.MakeMemberAccess(p, rightMember),
+                                descriptor.MemberInfo))));
+
+                return Expression.Lambda<Func<Join, bool>>(body, p);
+            }
+
+            public static Expression<Func<TValue, TValue, bool>> BuildJoinCondition(EntityDescriptor entityDescriptor)
+            {
+                var p1 = Expression.Parameter(typeof(TValue));
+                var p2 = Expression.Parameter(typeof(TValue));
+                var body = entityDescriptor.Columns.Where(x => x.IsPrimaryKey).Aggregate(
+                    (Expression) Expression.Constant(true),
+                    (expression, descriptor) => Expression.AndAlso(
+                        expression,
+                        Expression.Equal(
+                            Expression.MakeMemberAccess(p1, descriptor.MemberInfo),
+                            Expression.MakeMemberAccess(p2, descriptor.MemberInfo))));
+
+                return Expression.Lambda<Func<TValue, TValue, bool>>(body, p1, p2);
+            }
+        }
+
         private class EntityKeyComparer : EqualityComparer<TValue>
         {
             private readonly Func<TValue, TKey> _keyProjection;
@@ -129,6 +175,12 @@ namespace NuClear.ValidationRules.Import.FactWriters
 
             public override int GetHashCode(TValue obj)
                 => _keyComparer.GetHashCode(_keyProjection(obj));
+        }
+
+        private sealed class Join
+        {
+            public TValue Received { get; set; }
+            public TValue Stored { get; set; }
         }
     }
 }

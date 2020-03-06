@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
@@ -30,18 +31,8 @@ namespace NuClear.ValidationRules.Import.Processing
                 _connectionString);
             connection.AddMappingSchema(_schema);
 
-            // DataConnection.TurnTraceSwitchOn();
-            // DataConnection.WriteTraceLine = (s1, s2) =>
-            // {
-            //     lock (this)
-            //     {
-            //         File.AppendAllLines(@"c:\dev\log.txt", new[]
-            //         {
-            //             "===================================",
-            //             s1
-            //         });
-            //     }
-            // };
+            DataConnection.TurnTraceSwitchOn();
+            DataConnection.WriteTraceLine = (s1, s2) => Debug.WriteLine(s1);
 
             return connection;
         }

@@ -14,7 +14,7 @@ namespace NuClear.ValidationRules.Import.FactExtractors.FlowKaleidoscope
             {
                 yield return new PersistentFacts.Category {Id = category.Code, IsDeleted = true};
                 yield return Group.Create(
-                    new {CategoryId = category.Code},
+                    new {CategoryId = (long) category.Code},
                     Array.Empty<PersistentFacts.CategoryProject>());
             }
             else
@@ -33,7 +33,7 @@ namespace NuClear.ValidationRules.Import.FactExtractors.FlowKaleidoscope
 
                 yield return new PersistentFacts.Category {Id = category.Code, L1Id = category.Code};
                 yield return Group.Create(
-                    new {CategoryId = category.Code},
+                    new {CategoryId = (long) category.Code},
                     Array.Empty<PersistentFacts.CategoryProject>());
             }
         }

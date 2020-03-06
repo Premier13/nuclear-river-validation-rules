@@ -69,8 +69,6 @@ namespace NuClear.ValidationRules.Import.FactWriters
             IEnumerable<Category> upserted,
             IEnumerable<Category> deleted)
         {
-            var mergeTimer = Stopwatch.StartNew();
-
             var updatedTable = dataConnection.CreateTable<Category>($"#{typeof(Category).Name}Update");
             updatedTable.BulkCopy(upserted);
 
@@ -88,10 +86,6 @@ namespace NuClear.ValidationRules.Import.FactWriters
             var deletedTable = dataConnection.CreateTable<Category>($"#{typeof(Category).Name}Delete");
             deletedTable.BulkCopy(deleted);
 
-            mergeTimer.Stop();
-
-            Log.Debug("Flush merge records", new {typeof(Category).Name, Time = mergeTimer.Elapsed});
-
             return (updatedTable, deletedTable);
         }
 
@@ -103,28 +97,24 @@ namespace NuClear.ValidationRules.Import.FactWriters
             if (_relationProvider == null)
                 return Array.Empty<RelationRecord>();
 
-            var relationsTimer = Stopwatch.StartNew();
+            var actualUpserted = upserted
+                .LeftJoin(
+                    dataConnection.GetTable<Category>(),
+                    (x, y) => x.Id == y.Id,
+                    (received, stored) => new { received, stored })
+                .Where(x => x.received.L1Id != x.stored.L1Id || x.received.L2Id != x.stored.L2Id || x.received.L3Id != x.stored.L3Id);
 
-            var actualUpserted = dataConnection.GetTable<Category>().DefaultIfEmpty()
-                .Join(upserted, x => x.Id, x => x.Id, (stored, received) => new {stored, received})
-                .Where(x => x.stored != x.received);
-
-            var actualDeleted = dataConnection.GetTable<Category>().DefaultIfEmpty()
-                .Join(deleted, x => x.Id, x => x.Id, (stored, received) => new {stored, received})
+            var actualDeleted = deleted
+                .LeftJoin(
+                    dataConnection.GetTable<Category>(),
+                    (x, y) => x.Id == y.Id,
+                    (received, stored) => new { received, stored })
                 .Where(x => x.stored.IsDeleted != x.received.IsDeleted);
-
-            Debug.WriteLine(actualUpserted.Select(x => x.received).ToString());
-            Debug.WriteLine(actualDeleted.Select(x => x.received).ToString());
-            Debugger.Break();
 
             var relations = _relationProvider.GetRelations(
                 dataConnection,
                 actualUpserted.Select(x => x.received).Union(actualDeleted.Select(x => x.received)),
                 actualUpserted.Select(x => x.stored).Union(actualDeleted.Select(x => x.stored)));
-
-            relationsTimer.Stop();
-
-            Log.Debug("Flush calculate relations", new {typeof(Category).Name, Time = relationsTimer.Elapsed});
 
             return relations;
         }
@@ -134,8 +124,6 @@ namespace NuClear.ValidationRules.Import.FactWriters
             ITable<Category> upserted,
             ITable<Category> deleted)
         {
-            var mergeTimer = Stopwatch.StartNew();
-
             upserted.MergeInto(dataConnection.GetTable<Category>())
                 .OnTargetKey()
                 .UpdateWhenMatched()
@@ -147,10 +135,6 @@ namespace NuClear.ValidationRules.Import.FactWriters
                 .UpdateWhenMatched((source, target) => new Category {IsDeleted = true})
                 // .InsertWhenNotMatched()
                 .Merge();
-
-            mergeTimer.Stop();
-
-            Log.Debug("Flush merge records", new {typeof(Category).Name, Time = mergeTimer.Elapsed});
         }
     }
 }

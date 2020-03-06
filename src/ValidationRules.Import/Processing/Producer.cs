@@ -49,7 +49,7 @@ namespace NuClear.ValidationRules.Import.Processing
             while (!token.IsCancellationRequested)
             {
                 Thread.Sleep(100);
-                if (_cache.HasEnoughData || (_lastConsumed + _flushInterval) > DateTime.UtcNow)
+                if (_cache.HasEnoughData || _lastConsumed + _flushInterval < DateTime.UtcNow)
                 {
                     var data = _cache.Consume();
                     _lastConsumed = DateTime.UtcNow;

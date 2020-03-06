@@ -85,7 +85,7 @@ namespace NuClear.ValidationRules.Import.FactWriters
 
         private void WriteChanges(DataConnection dataConnection, IQueryable<TValue> created, IQueryable<TValue> deleted)
         {
-            deleted.Delete();
+            dataConnection.GetTable<TValue>().Delete(x => deleted.Contains(x));
             created.MergeInto(dataConnection.GetTable<TValue>())
                 .OnTargetKey()
                 .InsertWhenNotMatched()
