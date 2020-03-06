@@ -3,15 +3,16 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Linq;
 using System.Threading;
-using NuClear.ValidationRules.Import.Extractors;
-using NuClear.ValidationRules.Import.Extractors.FlowAdvModelsInfo;
-using NuClear.ValidationRules.Import.Extractors.FlowFinancialData;
-using NuClear.ValidationRules.Import.Extractors.FlowKaleidoscope;
-using NuClear.ValidationRules.Import.Extractors.FlowNomenclatures;
-using NuClear.ValidationRules.Import.Extractors.FlowPriceLists;
+using NuClear.ValidationRules.Import.FactConfigurations;
+using NuClear.ValidationRules.Import.FactExtractors;
+using NuClear.ValidationRules.Import.FactExtractors.FlowAdvModelsInfo;
+using NuClear.ValidationRules.Import.FactExtractors.FlowFinancialData;
+using NuClear.ValidationRules.Import.FactExtractors.FlowKaleidoscope;
+using NuClear.ValidationRules.Import.FactExtractors.FlowNomenclatures;
+using NuClear.ValidationRules.Import.FactExtractors.FlowPriceLists;
 using NuClear.ValidationRules.Import.Model.Service;
 using NuClear.ValidationRules.Import.Processing;
-using NuClear.ValidationRules.Import.Relations;
+using NuClear.ValidationRules.Import.Processing.Interfaces;
 
 namespace NuClear.ValidationRules.Import
 {
@@ -44,6 +45,7 @@ namespace NuClear.ValidationRules.Import
             new BranchOfficeOrganizationUnitConfiguration(),
             new BranchOfficeConfiguration(),
             new CategoryConfiguration(),
+            new CategoryProjectConfiguration(),
             new CostPerClickCategoryRestrictionConfiguration(),
             new EntityNameConfiguration(),
             new LegalPersonConfiguration(),
@@ -68,7 +70,7 @@ namespace NuClear.ValidationRules.Import
             {
                 var dataConnectionFactory = new DataConnectionFactory(database, Configurations);
                 var producerFactory = new ProducerFactory(dataConnectionFactory, Configurations, enableRelations);
-                var partitionManager = new PartitionManager(dataConnectionFactory, producerFactory);
+                var partitionManager = new ProducerManager(dataConnectionFactory, producerFactory);
                 var pollTimeout = TimeSpan.FromMilliseconds(100);
                 var consumer = ConsumerFactory.Create(
                     brokers,

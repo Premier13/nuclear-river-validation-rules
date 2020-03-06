@@ -3,9 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
-using NuClear.ValidationRules.Import.Relations;
 
 namespace NuClear.ValidationRules.Import.Processing
 {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Confluent.Kafka;
-using NuClear.ValidationRules.Import.Extractors;
+using NuClear.ValidationRules.Import.Processing.Interfaces;
 
 namespace NuClear.ValidationRules.Import.Processing
 {
@@ -13,7 +13,7 @@ namespace NuClear.ValidationRules.Import.Processing
             string brokers,
             IEnumerable<string> kafka,
             IReadOnlyCollection<IFactExtractor> extractors,
-            PartitionManager partitionManager)
+            ProducerManager producerManager)
         {
             var config = new ConsumerConfig(
                 kafka.Select(x => x.Split('=')).ToDictionary(x => x[0], x => x[1]))
@@ -28,8 +28,8 @@ namespace NuClear.ValidationRules.Import.Processing
                 .SetErrorHandler(ErrorHandler)
                 .SetLogHandler(LogHandler)
                 .SetPartitionsAssignedHandler(
-                    (consumer, partitions) => partitionManager.OnPartitionAssigned(partitions))
-                .SetPartitionsRevokedHandler((consumer, partitions) => partitionManager.OnPartitionRevoked(partitions))
+                    (consumer, partitions) => producerManager.OnPartitionAssigned(partitions))
+                .SetPartitionsRevokedHandler((consumer, partitions) => producerManager.OnPartitionRevoked(partitions))
                 .Build();
         }
 

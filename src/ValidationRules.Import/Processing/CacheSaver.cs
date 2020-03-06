@@ -2,14 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Transactions;
 using LinqToDB.Data;
 using NuClear.ValidationRules.Import.Model;
 using NuClear.ValidationRules.Import.Model.Service;
-using NuClear.ValidationRules.Import.Processing.Writers;
-using NuClear.ValidationRules.Import.Relations;
+using NuClear.ValidationRules.Import.Processing.Interfaces;
 
 namespace NuClear.ValidationRules.Import.Processing
 {
@@ -27,8 +25,13 @@ namespace NuClear.ValidationRules.Import.Processing
             _writerByEntityType = new Dictionary<Type, IEntityWriter>();
         }
 
-        public FluentBuilder<TValue> Entity<TValue>() where TValue : class
-            => new FluentBuilder<TValue>(this);
+        public void Add(Type dataType, IEntityWriter writer)
+        {
+            lock (_writerByEntityType)
+            {
+                _writerByEntityType[dataType] = writer;
+            }
+        }
 
         public void Write(IReadOnlyDictionary<Type, ICollection> data, CancellationToken token)
         {
@@ -70,14 +73,6 @@ namespace NuClear.ValidationRules.Import.Processing
             }
         }
 
-        public void Add(Type dataType, IEntityWriter writer)
-        {
-            lock (_writerByEntityType)
-            {
-                _writerByEntityType[dataType] = writer;
-            }
-        }
-
         private static void WriteEvents(DataConnection dataConnection, IReadOnlyCollection<RelationRecord> relations)
         {
             const string flow = "9BD1C845-2574-4003-8722-8A55B1D4AE38";
@@ -92,29 +87,6 @@ namespace NuClear.ValidationRules.Import.Processing
                 Flow = flow,
                 Content = string.Format(eventTemplate, x.Type, x.RelatedType, x.RelatedId),
             }));
-        }
-
-        public sealed class FluentBuilder<TValue> where TValue : class
-        {
-            private readonly CacheSaver _cacheSaver;
-            private readonly IRelationProvider<TValue> _provider;
-
-            public FluentBuilder(CacheSaver cacheSaver)
-            {
-                _cacheSaver = cacheSaver;
-            }
-
-            private FluentBuilder(CacheSaver cacheSaver, IRelationProvider<TValue> provider)
-                => (_cacheSaver, _provider) = (cacheSaver, provider);
-
-            public FluentBuilder<TValue> HasRelationsProvider(IRelationProvider<TValue> provider)
-                => new FluentBuilder<TValue>(_cacheSaver, provider);
-
-            public void HasKey<TKey>(Expression<Func<TValue, TKey>> keyExpression)
-                => _cacheSaver.Add(typeof(TValue), new EntityWriter<TKey, TValue>(_provider, keyExpression));
-
-            public void HasGroupKey<TKey>(Expression<Func<TValue, TKey>> keyExpression)
-                => _cacheSaver.Add(typeof(Group<TKey, TValue>), new GroupWriter<TKey, TValue>(_provider, keyExpression));
         }
     }
 }

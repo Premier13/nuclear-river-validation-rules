@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using NuClear.ValidationRules.Import.Relations;
+using NuClear.ValidationRules.Import.Processing.Interfaces;
 
 namespace NuClear.ValidationRules.Import.Processing
 {
@@ -13,7 +13,10 @@ namespace NuClear.ValidationRules.Import.Processing
         private readonly IReadOnlyCollection<IEntityConfiguration> _configurations;
         private readonly bool _enableRelations;
 
-        public ProducerFactory(DataConnectionFactory dataConnectionFactory, IReadOnlyCollection<IEntityConfiguration> configurations, bool enableRelations)
+        public ProducerFactory(
+            DataConnectionFactory dataConnectionFactory,
+            IReadOnlyCollection<IEntityConfiguration> configurations,
+            bool enableRelations)
         {
             _dataConnectionFactory = dataConnectionFactory;
             _configurations = configurations;

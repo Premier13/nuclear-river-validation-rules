@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
-using NuClear.ValidationRules.Import.Relations;
+using NuClear.ValidationRules.Import.Model;
+using NuClear.ValidationRules.Import.Processing.Interfaces;
 
 namespace NuClear.ValidationRules.Import.Processing
 {
