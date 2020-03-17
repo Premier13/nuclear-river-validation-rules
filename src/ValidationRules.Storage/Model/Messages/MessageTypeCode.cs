@@ -69,9 +69,6 @@
         OrderMustHaveActiveDeal = 62,
         OrderMustHaveActiveLegalEntities = 63,
 
-        FirmAddressMustNotHaveMultiplePremiumPartnerAdvertisement = 71,
-        FirmAddressShouldNotHaveMultiplePartnerAdvertisement = 72,
-
         PartnerAdvertisementMustNotCauseProblemsToTheAdvertiser = 75,
         PartnerAdvertisementShouldNotHaveDifferentSalesModel = 76,
         
