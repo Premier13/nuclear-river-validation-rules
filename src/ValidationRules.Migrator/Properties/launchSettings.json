@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "run": {
+      "commandName": "Project",
+      "commandLineArgs": "\"Data Source=uk-erm-sql02;Initial Catalog=ValidationRulesRU20;Application Name=ValidationRules.Import;Integrated Security=True;\" asdasd"
+    }
+  }
+}
