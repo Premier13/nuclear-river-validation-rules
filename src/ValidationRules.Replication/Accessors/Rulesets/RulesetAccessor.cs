@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NuClear.Replication.Core;
@@ -50,11 +50,11 @@ namespace NuClear.ValidationRules.Replication.Accessors.Rulesets
         public IReadOnlyCollection<IEvent> HandleCreates(IReadOnlyCollection<Ruleset> dataObjects)
             => new[] {new DataObjectCreatedEvent(typeof(Ruleset), dataObjects.Select(x => x.Id))};
 
-        public IReadOnlyCollection<IEvent> HandleUpdates(IReadOnlyCollection<Ruleset> dataObjects) =>
-            Array.Empty<IEvent>();
+        public IReadOnlyCollection<IEvent> HandleUpdates(IReadOnlyCollection<Ruleset> dataObjects)
+            => new[] {new DataObjectUpdatedEvent(typeof(Ruleset), dataObjects.Select(x => x.Id))};
 
-        public IReadOnlyCollection<IEvent> HandleDeletes(IReadOnlyCollection<Ruleset> dataObjects) =>
-            Array.Empty<IEvent>();
+        public IReadOnlyCollection<IEvent> HandleDeletes(IReadOnlyCollection<Ruleset> dataObjects)
+            => new[] {new DataObjectDeletedEvent(typeof(Ruleset), dataObjects.Select(x => x.Id))};
 
         public IReadOnlyCollection<IEvent> HandleRelates(IReadOnlyCollection<Ruleset> dataObjects)
         {
