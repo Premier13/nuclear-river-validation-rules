@@ -16,6 +16,11 @@ if ($Properties.Count -eq 0){
 	#$Properties.UpdateSchemas = 'PriceAggregate'
 }
 
+# invoke migrator on each service deploy
+if ($Properties.EntryPoints -contains 'ValidationRules.Replication.Host' ) {
+	$Properties.EntryPoints = (@($Properties.EntryPoints) + @('ValidationRules.Migrator')) | select -Unique
+}
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 #------------------------------
