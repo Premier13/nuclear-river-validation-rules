@@ -20,6 +20,11 @@ function Get-EntryPointsMetadata ($EntryPoints, $Context) {
 			$entryPointsMetadata += Get-WinServiceMetadata $Context
 		}
 
+		'ValidationRules.Migrator' {
+			$Context.EntryPoint = $_
+			$entryPointsMetadata += Get-AssemblyMetadata $Context
+		}
+
 		'ValidationRules.Replication.Comparison.Tests' {
 			$Context.EntryPoint = $_
 			$entryPointsMetadata += Get-AssemblyMetadata $Context

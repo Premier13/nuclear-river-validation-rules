@@ -13,6 +13,7 @@ Include "$BuildToolsRoot\psake\common.ps1"
 Include "$BuildToolsRoot\psake\unittests.ps1"
 Include 'servicebus.ps1'
 Include 'bulktool.ps1'
+Include 'migrations.ps1'
 Include 'tests.ps1'
 
 # Querying.Host
@@ -66,11 +67,13 @@ Task Build-Packages -depends `
 	QueueBuild-QueryingHost, `
 	QueueBuild-ReplicationHost, `
 	QueueBuild-Tests, `
+	QueueBuild-Migrations, `
 	Build-Queue
 
 Task Deploy-Packages -depends `
 	Stop-ReplicationHost, `
 	Deploy-ServiceBus, `
+	Run-Migrations, `
 	Run-BulkTool, `
 	QueueDeploy-QueryingHost, `
 	QueueDeploy-ReplicationHost, `
