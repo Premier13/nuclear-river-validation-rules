@@ -10,7 +10,7 @@ namespace NuClear.ValidationRules.Import
 
         public static void Debug(string template, object arg)
         {
-            Write("Debug", template, arg);
+            // Write("Debug", template, arg);
         }
 
         public static void Info(string template, object arg)
@@ -31,7 +31,7 @@ namespace NuClear.ValidationRules.Import
         private static void Write(string level, string template, object arg)
         {
             Console.WriteLine(
-                JsonConvert.SerializeObject(new {Level = level, Timestamp = Timer.Elapsed, Message = template, Data = arg}));
+                JsonConvert.SerializeObject(new {Level = level, Elapsed = Timer.Elapsed, Message = template, Data = arg}));
         }
     }
 }
