@@ -78,7 +78,7 @@ namespace NuClear.ValidationRules.Import.Processing
 
         private static void WriteEvents(DataConnection dataConnection, IReadOnlyCollection<RelationRecord> relations)
         {
-            const string flow = "9BD1C845-2574-4003-8722-8A55B1D4AE38";
+            var flow = Guid.Parse("9BD1C845-2574-4003-8722-8A55B1D4AE38");
             const string eventTemplate = "<event type='RelatedDataObjectOutdatedEvent'>" +
                 "<type>{0}</type>" +
                 "<relatedType>{1}</relatedType>" +
