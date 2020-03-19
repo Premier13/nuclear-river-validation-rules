@@ -16,8 +16,8 @@ spec:
         app: {{ app_name }}
     spec:
       terminationGracePeriodSeconds: {{ termination_grace_period_seconds | default('60') }}
-#      nodeSelector:
-#        role: worker
+      nodeSelector:
+        role: worker
       containers:
       - name: {{ app_name }}
         image: "{{ image_path }}:{{ image_version }}"
@@ -26,11 +26,18 @@ spec:
         - "--database"
         - "{{ database }}"
         - "--topic"
-        - "{{ flowFinancialDataTopic }}"
+        - "{{ flowKaleidoscope }}"
+        - "--topic"
+        - "{{ flowAdvModelsInfo }}"
+        - "--topic"
+        - "{{ flowFinancialData }}"
+        - "--topic"
+        - "{{ flowNomenclatures }}"
         - "--brokers"
         - "{{ brokers }}"
         - "--kafka"
         - "group.id={{ group_id }}"
+        - "--enable-relations"
         resources:
           requests:
             cpu: {{ requests_cpu }}

@@ -1,6 +1,6 @@
 ---
 common:
-  k8s_namespace: a-rechkalov
+  k8s_namespace: crm
 
   app_name: vr-import
 
@@ -8,15 +8,18 @@ common:
   image_path: docker-hub.2gis.ru/erm/vr-import   # Change it to your application image
   image_version: "{{ env='IMAGE_VERSION' }}"    # Takes IMAGE_VERSION from environment
 
-  requests_cpu: "50m"
-  requests_memory: "100Mi"
-  limits_cpu: "100m"
-  limits_memory: "200Mi"
+  requests_cpu: "100m"
+  requests_memory: "200Mi"
+  limits_cpu: "200m"
+  limits_memory: "400Mi"
 
   database: "Data Source={{ env='VR_DB_HOST' }};Initial Catalog={{ env='VR_DB_NAME' }};Application Name=ValidationRules.Import;User Id={{ env='VR_DB_USER' }};Password={{ env='VR_DB_PASSWORD'}};"
   brokers: "kafka1.c.n3.hw:9092"
   group_id: "crm_vr_dev"
-  flowFinancialDataTopic: "casino_staging_flowFinancialData_compacted"
+  flowKaleidoscope: "casino_staging_flowKaleidoscope"
+  flowAdvModelsInfo: "casino_staging_flowAdvModelsInfo"
+  flowFinancialData: "casino_staging_flowFinancialData"
+  flowNomenclatures: "casino_staging_flowNomenclatures"
 
 staging:
   templates:
