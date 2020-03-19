@@ -8,10 +8,10 @@ common:
   image_path: docker-hub.2gis.ru/erm/vr-import   # Change it to your application image
   image_version: "{{ env='IMAGE_VERSION' }}"    # Takes IMAGE_VERSION from environment
 
-  requests_cpu: "100m"
-  requests_memory: "200Mi"
+  requests_cpu: "50m"
+  requests_memory: "150Mi"
   limits_cpu: "200m"
-  limits_memory: "400Mi"
+  limits_memory: "500Mi"
 
   database: "Data Source={{ env='VR_DB_HOST' }};Initial Catalog={{ env='VR_DB_NAME' }};Application Name=ValidationRules.Import;User Id={{ env='VR_DB_USER' }};Password={{ env='VR_DB_PASSWORD'}};"
   brokers: "kafka1.c.n3.hw:9092"
