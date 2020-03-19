@@ -72,7 +72,11 @@ namespace NuClear.ValidationRules.Import.Processing
                 WriteEvents(dataConnection, allRelations);
 
                 transaction.Complete();
-                Log.Info("Write transaction completed", summary);
+
+                if(summary.Any())
+                    Log.Info("Write transaction completed", summary);
+                else
+                    Log.Debug("Write transaction completed", summary);
             }
         }
 
