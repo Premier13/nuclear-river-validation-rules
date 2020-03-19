@@ -9,7 +9,6 @@ namespace NuClear.ValidationRules.Import
             var rootCommand = new RootCommand
             {
                 CreateReplicateCommand(),
-                CreateInitializeCommand(),
             };
 
             return rootCommand.Invoke(args);
