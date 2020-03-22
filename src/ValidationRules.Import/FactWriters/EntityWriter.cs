@@ -63,12 +63,17 @@ namespace NuClear.ValidationRules.Import.FactWriters
         {
             var descriptor = dataConnection.MappingSchema.GetEntityDescriptor(typeof(TValue));
 
-            var mergeCommand = actual.MergeInto(dataConnection.GetTable<TValue>())
-                .OnTargetKey()
-                .InsertWhenNotMatched();
+            var mergeCommand = (IMergeable<TValue, TValue>)actual
+                    .MergeInto(dataConnection.GetTable<TValue>())
+                    .OnTargetKey();
 
             if (IsDeletable())
-                mergeCommand = mergeCommand.DeleteWhenMatchedAnd((target, source) => ((IDeletable) source).IsDeleted);
+                mergeCommand = mergeCommand
+                    .InsertWhenNotMatchedAnd(source => !((IDeletable) source).IsDeleted)
+                    .DeleteWhenMatchedAnd((target, source) => ((IDeletable) source).IsDeleted);
+            else
+                mergeCommand = mergeCommand
+                    .InsertWhenNotMatched();
 
             if (HasUpdatableProperties(descriptor))
                 mergeCommand = mergeCommand.UpdateWhenMatched();
