@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using NuClear.ValidationRules.Import.Model;
 using NuClear.ValidationRules.Import.Model.CommonFormat.flowNomenclatures.NomenclatureElement;
 
 namespace NuClear.ValidationRules.Import.FactExtractors.FlowNomenclatures
@@ -23,7 +25,8 @@ namespace NuClear.ValidationRules.Import.FactExtractors.FlowNomenclatures
 
         protected override IEnumerable<object> Extract(NomenclatureElement nomenclatureElement)
         {
-            foreach (var country in nomenclatureElement.Countries.Where(x => SupportedCountryCodes.Contains(x.CountryCode)))
+            foreach (var country in nomenclatureElement.Countries.Where(x =>
+                SupportedCountryCodes.Contains(x.CountryCode)))
             {
                 yield return new Model.PersistentFacts.EntityName
                 {
@@ -38,40 +41,23 @@ namespace NuClear.ValidationRules.Import.FactExtractors.FlowNomenclatures
             {
                 Id = nomenclatureElement.Code,
                 CategoryCode = nomenclatureElement.NomenclatureCategoryCode,
-                ContentSales = (int)nomenclatureElement.ContentSales,
+                ContentSales = (int) nomenclatureElement.ContentSales,
                 IsDeleted = nomenclatureElement.IsDeleted,
-                PositionsGroup = (int)nomenclatureElement.PositionsGroup,
-                SalesModel = (int)nomenclatureElement.AdvModel,
-                BindingObjectType = (int)nomenclatureElement.LinkObjectType,
+                PositionsGroup = (int) nomenclatureElement.PositionsGroup,
+                SalesModel = (int) nomenclatureElement.AdvModel,
+                BindingObjectType = (int) nomenclatureElement.LinkObjectType,
                 IsCompositionOptional = nomenclatureElement.IsCompositionOptional,
                 IsControlledByAmount = nomenclatureElement.IsControlledByAmount,
             };
 
-            if (nomenclatureElement.Composition != null)
-            {
-                foreach (var simple in nomenclatureElement.Composition)
+            yield return Group.Create(
+                new {MasterPositionId = (long) nomenclatureElement.Code},
+                (nomenclatureElement.Composition ?? Array.Empty<NomenclatureElementSimple>())
+                .Select(simple => new Model.PersistentFacts.PositionChild
                 {
-                    // fixme: это надо или он обязательно уже объявлен должен быть ранее?
-                    // yield return new Model.PersistentFacts.Position
-                    // {
-                    //     Id = simple.Code,
-                    //     CategoryCode = simple.NomenclatureCategoryCode,
-                    //     ContentSales = (int)simple.ContentSales,
-                    //     IsDeleted = nomenclatureElement.IsDeleted,
-                    //     PositionsGroup = (int)simple.PositionsGroup,
-                    //     SalesModel = (int)simple.AdvModel,
-                    //     BindingObjectType = (int)simple.LinkObjectType,
-                    //     IsCompositionOptional = false,
-                    //     IsControlledByAmount = simple.IsControlledByAmount,
-                    // };
-
-                    yield return new Model.PersistentFacts.PositionChild
-                    {
-                        MasterPositionId = nomenclatureElement.Code,
-                        ChildPositionId = simple.Code,
-                    };
-                }
-            }
+                    MasterPositionId = nomenclatureElement.Code,
+                    ChildPositionId = simple.Code,
+                }).ToList());
         }
     }
 }

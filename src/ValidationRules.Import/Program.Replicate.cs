@@ -107,6 +107,9 @@ namespace NuClear.ValidationRules.Import
             catch (Exception e)
             {
                 Log.Error("Fatal error", e);
+#if DEBUG
+                throw;
+#endif
             }
         }
 

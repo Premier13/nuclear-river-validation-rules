@@ -12,7 +12,7 @@ namespace NuClear.ValidationRules.Migrator.Migrations
             Create.Table("ConsumerState")
                 .InSchema("Service")
                 .WithColumn("Topic").AsString(128).PrimaryKey()
-                .WithColumn("Partition").AsInt32()
+                .WithColumn("Partition").AsInt32().PrimaryKey()
                 .WithColumn("Offset").AsInt64();
 
             Create.Table("EventRecord")

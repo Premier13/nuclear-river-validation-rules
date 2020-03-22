@@ -47,7 +47,7 @@ namespace NuClear.ValidationRules.Import.Processing
                     if (value.Count == 0)
                         continue;
 
-                    summary.Add(key.Name, value.Count);
+                    summary.Add(GetName(key), value.Count);
 
                     if (!_writerByEntityType.TryGetValue(key, out var writer))
                         throw new Exception($"No relation provider for type '{key.FullName}' was added.");
@@ -73,11 +73,18 @@ namespace NuClear.ValidationRules.Import.Processing
 
                 transaction.Complete();
 
-                if(summary.Any())
+                if (summary.Any())
                     Log.Info("Write transaction completed", summary);
                 else
-                    Log.Debug("Write transaction completed", summary);
+                    Log.Debug("Write transaction completed", new { });
             }
+        }
+
+        private string GetName(Type type)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Group<,>))
+                return type.GenericTypeArguments.Last().Name;
+            return type.Name;
         }
 
         private static void WriteEvents(DataConnection dataConnection, IReadOnlyCollection<RelationRecord> relations)

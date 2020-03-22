@@ -21,7 +21,7 @@ namespace NuClear.ValidationRules.Import.FactConfigurations
         public void Apply(CacheSaver cacheSaver, bool enableRelations)
             => cacheSaver.Entity<SalesModelCategoryRestriction>()
                 .HasRelationsProvider(enableRelations ? this : null)
-                .HasKey(x => new {x.ProjectId, x.Start, x.CategoryId});
+                .HasGroupKey(x => new SalesModelCategoryRestriction.GroupKey {ProjectId = x.ProjectId, Start = x.Start});
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,
             IQueryable<SalesModelCategoryRestriction> actual, IQueryable<SalesModelCategoryRestriction> outdated)

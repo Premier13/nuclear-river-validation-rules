@@ -22,7 +22,7 @@ namespace NuClear.ValidationRules.Import.FactConfigurations
         public void Apply(CacheSaver cacheSaver, bool enableRelations)
             => cacheSaver.Entity<PositionChild>()
                 .HasRelationsProvider(enableRelations ? this : null)
-                .HasKey(x => new {x.ChildPositionId, x.MasterPositionId});
+                .HasGroupKey(x => new {x.MasterPositionId});
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,
             IQueryable<PositionChild> actual, IQueryable<PositionChild> outdated)

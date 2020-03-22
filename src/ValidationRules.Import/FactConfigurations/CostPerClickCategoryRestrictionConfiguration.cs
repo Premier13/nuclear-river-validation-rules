@@ -21,7 +21,7 @@ namespace NuClear.ValidationRules.Import.FactConfigurations
         public void Apply(CacheSaver cacheSaver, bool enableRelations)
             => cacheSaver.Entity<CostPerClickCategoryRestriction>()
                 .HasRelationsProvider(enableRelations ? this : null)
-                .HasKey(x => new {x.ProjectId, x.Start, x.CategoryId});
+                .HasGroupKey(x => new CostPerClickCategoryRestriction.GroupKey {ProjectId = x.ProjectId, Start = x.Start});
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,
             IQueryable<CostPerClickCategoryRestriction> actual, IQueryable<CostPerClickCategoryRestriction> outdated)

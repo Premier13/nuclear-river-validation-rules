@@ -32,6 +32,7 @@ namespace NuClear.ValidationRules.Import.FactWriters
             => _cacheSaver.Add(typeof(TValue), new EntityWriter<TKey, TValue>(_provider, keyExpression));
 
         public void HasGroupKey<TKey>(Expression<Func<TValue, TKey>> keyExpression)
+            where TKey : class // Небольшое напоминание, чттобы не использовать примитивные типы, таблицы создавать нудно.
             => _cacheSaver.Add(typeof(Group<TKey, TValue>), new GroupWriter<TKey, TValue>(_provider, keyExpression));
     }
 }
