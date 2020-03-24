@@ -19,7 +19,6 @@ namespace NuClear.ValidationRules.Import.FactWriters
     /// </summary>
     public sealed class EntityWriter<TKey, TValue> : IEntityWriter where TValue : class
     {
-        private readonly Expression<Func<TValue, TKey>> _entityKey;
         private readonly IRelationProvider<TValue> _relationProvider;
         private readonly IEqualityComparer<TValue> _entityComparer;
 
@@ -27,7 +26,6 @@ namespace NuClear.ValidationRules.Import.FactWriters
             IRelationProvider<TValue> relationProvider,
             Expression<Func<TValue, TKey>> entityKey)
         {
-            _entityKey = entityKey;
             _relationProvider = relationProvider;
             _entityComparer = new EntityKeyComparer(entityKey.Compile(), EqualityComparer<TKey>.Default);
         }

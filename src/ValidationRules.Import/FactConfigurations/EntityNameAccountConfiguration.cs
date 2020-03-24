@@ -16,12 +16,12 @@ namespace NuClear.ValidationRules.Import.FactConfigurations
         public void Apply(FluentMappingBuilder builder)
             => builder.Entity<EntityName>()
                 .HasSchemaName(Schema.PersistentFactsSchema)
-                .HasPrimaryKey(x => new {x.Id, x.TenantId});
+                .HasPrimaryKey(x => new {x.Id, x.EntityType, x.TenantId});
 
         public void Apply(CacheSaver cacheSaver, bool enableRelations)
             => cacheSaver.Entity<EntityName>()
                 .HasRelationsProvider(enableRelations ? this : null)
-                .HasKey(x => new {x.Id, x.TenantId});
+                .HasKey(x => new {x.Id, x.EntityType, x.TenantId});
 
         public IReadOnlyCollection<RelationRecord> GetRelations(DataConnection dataConnection,
             IQueryable<EntityName> actual, IQueryable<EntityName> outdated)

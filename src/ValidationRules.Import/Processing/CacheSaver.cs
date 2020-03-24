@@ -14,7 +14,7 @@ namespace NuClear.ValidationRules.Import.Processing
     public sealed class CacheSaver
     {
         private static readonly TransactionOptions TransactionOptions
-            = new TransactionOptions {IsolationLevel = IsolationLevel.ReadCommitted};
+            = new TransactionOptions {IsolationLevel = IsolationLevel.Snapshot};
 
         private readonly DataConnectionFactory _dataConnectionFactory;
         private readonly IDictionary<Type, IEntityWriter> _writerByEntityType;
