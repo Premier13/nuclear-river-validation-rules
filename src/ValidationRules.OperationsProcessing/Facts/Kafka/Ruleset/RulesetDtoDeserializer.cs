@@ -10,8 +10,8 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
 {
     public sealed class RulesetDtoDeserializer : IDeserializer<ConsumeResult<Ignore, byte[]>, RulesetDto>
     {
-        public IEnumerable<RulesetDto> Deserialize(IEnumerable<ConsumeResult<Ignore, byte[]>> consumeResults) =>
-            consumeResults
+        public IEnumerable<RulesetDto> Deserialize(IEnumerable<ConsumeResult<Ignore, byte[]>> messages) =>
+            messages
                 // filter heartbeat & tombstone messages
                 .Where(x => x.Value != null)
                 .Select(x =>

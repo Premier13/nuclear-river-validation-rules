@@ -6,12 +6,13 @@ using System.Transactions;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
-
+using NuClear.Messaging.API.Flows;
 using NuClear.Replication.Core;
 using NuClear.Replication.Core.Actors;
 using NuClear.Storage.API.ConnectionStrings;
 using NuClear.ValidationRules.Hosting.Common;
 using NuClear.ValidationRules.Hosting.Common.Identities.Connections;
+using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
 using NuClear.ValidationRules.SingleCheck.Store;
 using NuClear.ValidationRules.Storage;
 using NuClear.ValidationRules.Storage.SchemaInitializer;
@@ -40,21 +41,17 @@ namespace NuClear.ValidationRules.StateInitialization.Host
 
         private void ExecuteCommand(SchemaInitializationCommand cmd)
         {
-            using (var db = CreateDataConnection(cmd))
-            {
-                var service = new SqlSchemaService(db);
-                var allTables = service.AllTables();
-
-                var tablesToDelete = allTables
-                    .Where(x => cmd.SqlSchemas.Contains(x.SchemaName));
-
-                using (var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
-                {
-                    service.DropTables(tablesToDelete);
-                    service.CreateTables(cmd.DataTypes);
-                    scope.Complete();
-                }
-            }
+            using var db = CreateDataConnection(cmd);
+            var service = new SqlSchemaService(db);
+            using var scope = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted });
+            
+            // stateinit в классическом понимании сломан
+            // теперь не удаляются все таблицы в схеме
+            // механизм недо-stateinit должен быть заменён полноценным migrations engine 
+            service.DropTables(cmd.DataTypes);
+            
+            service.CreateTables(cmd.DataTypes);
+            scope.Complete();
         }
 
         private DataConnection CreateDataConnection(SchemaInitializationCommand command)
@@ -84,12 +81,27 @@ namespace NuClear.ValidationRules.StateInitialization.Host
 
     public static class SchemaInitializationCommands
     {
-        public static SchemaInitializationCommand Facts { get; }
+        public static SchemaInitializationCommand ErmFacts { get; }
             = new SchemaInitializationCommand(Schema.Facts,
-                DataObjectTypesProvider.AllFactTypes,
+                DataObjectTypesProvider.ErmFactTypes,
                 ValidationRulesConnectionStringIdentity.Instance,
                 new[] { "Facts" });
 
+        public static IReadOnlyDictionary<IMessageFlow, SchemaInitializationCommand> KafkaFacts { get; }
+            = new Dictionary<IMessageFlow, IReadOnlyCollection<Type>>
+            {
+                {AmsFactsFlow.Instance, DataObjectTypesProvider.AmsFactTypes},
+                {RulesetFactsFlow.Instance, DataObjectTypesProvider.RulesetFactTypes},
+                {InfoRussiaFactsFlow.Instance, DataObjectTypesProvider.InfoRussiaFactTypes},
+                {FijiFactsFlow.Instance, DataObjectTypesProvider.FijiFactTypes}
+            }.ToDictionary(x => x.Key, x =>
+                new SchemaInitializationCommand(
+                    Schema.Facts,
+                    // EntityName не должен перезатираться, он должен мёрджиться
+                    x.Value.Except(new []{typeof(NuClear.ValidationRules.Storage.Model.Facts.EntityName)}).ToList(),
+                    ValidationRulesConnectionStringIdentity.Instance,
+                    new[] { "Facts" }));
+        
         public static SchemaInitializationCommand Aggregates { get; }
             = new SchemaInitializationCommand(Schema.Aggregates,
                 DataObjectTypesProvider.AggregateTypes,

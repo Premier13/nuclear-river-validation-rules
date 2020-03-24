@@ -9,6 +9,8 @@ using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
 using NuClear.ValidationRules.OperationsProcessing.AggregatesFlow;
 using NuClear.ValidationRules.OperationsProcessing.Facts.Erm;
 using NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams;
+using NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Fiji;
+using NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.InfoRussia;
 using NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset;
 using NuClear.ValidationRules.OperationsProcessing.MessagesFlow;
 using NuClear.ValidationRules.OperationsProcessing.Transports;
@@ -23,7 +25,9 @@ namespace NuClear.ValidationRules.OperationsProcessing
                     MessageFlowMetadata.Config.For<KafkaFactsFlow>()
                         .Receiver<BatchingKafkaReceiverTelemetryDecorator>()
                         .To.Primary().Flow<AmsFactsFlow>().Connect()
-                        .To.Primary().Flow<RulesetFactsFlow>().Connect(),
+                        .To.Primary().Flow<RulesetFactsFlow>().Connect()
+                        .To.Primary().Flow<InfoRussiaFactsFlow>().Connect()
+                        .To.Primary().Flow<FijiFactsFlow>().Connect(),
 
                     MessageFlowMetadata.Config.For<AmsFactsFlow>()
                         .Accumulator<AmsFactsFlowAccumulator>()
@@ -32,6 +36,14 @@ namespace NuClear.ValidationRules.OperationsProcessing
                     MessageFlowMetadata.Config.For<RulesetFactsFlow>()
                         .Accumulator<RulesetFactsFlowAccumulator>()
                         .To.Primary().Flow<RulesetFactsFlow>().Connect(),
+
+                    MessageFlowMetadata.Config.For<InfoRussiaFactsFlow>()
+                        .Accumulator<InfoRussiaFactsFlowAccumulator>()
+                        .To.Primary().Flow<InfoRussiaFactsFlow>().Connect(),
+
+                    MessageFlowMetadata.Config.For<FijiFactsFlow>()
+                        .Accumulator<FijiFactsFlowAccumulator>()
+                        .To.Primary().Flow<FijiFactsFlow>().Connect(),
 
                     MessageFlowMetadata.Config.For<ErmFactsFlow>()
                         .Receiver<BatchingServiceBusMessageReceiverTelemetryDecorator<ErmFactsFlowTelemetryPublisher>>()

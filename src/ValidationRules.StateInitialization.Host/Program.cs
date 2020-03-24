@@ -1,5 +1,4 @@
-﻿using Confluent.Kafka;
-using NuClear.Assembling.TypeProcessing;
+﻿using NuClear.Assembling.TypeProcessing;
 using NuClear.Replication.Core;
 using NuClear.River.Hosting.Common.Settings;
 using NuClear.StateInitialization.Core.Actors;
@@ -10,12 +9,11 @@ using NuClear.ValidationRules.Hosting.Common;
 using NuClear.ValidationRules.Hosting.Common.Settings.Kafka;
 using NuClear.ValidationRules.StateInitialization.Host.Assembling;
 using NuClear.ValidationRules.StateInitialization.Host.Kafka;
-using NuClear.ValidationRules.StateInitialization.Host.Kafka.Ams;
-using NuClear.ValidationRules.StateInitialization.Host.Kafka.Rulesets;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using NuClear.Messaging.API.Flows;
 using NuClear.Replication.Core.Tenancy;
 using NuClear.StateInitialization.Core.Commands;
 using NuClear.ValidationRules.Hosting.Common.Settings;
@@ -35,15 +33,24 @@ namespace NuClear.ValidationRules.StateInitialization.Host
             var commands = new List<ICommand>();
             var tenants = ParseTenants(args);
 
-            if (args.Any(x => x.Contains("-facts")))
+            if (args.Contains("-facts"))
             {
-                commands.AddRange(BulkReplicationCommands.ErmToFacts
-                    .Where(x => IsConfigured(x, tenants)));
-                commands.Add(new KafkaReplicationCommand(KafkaFactsFlow.Instance, BulkReplicationCommands.KafkaToFacts));
-                // TODO: отдельный schema init для erm\ams\ruleset facts
-                // мешает таблица EntityName, она общая и у Kafka и у Erm
-                // отдельный schameinit будет перезатирать эту таблицу от другого schemainit, а должен мёрджить
-                commands.Add(SchemaInitializationCommands.Facts);
+                if (tenants.Count != 0)
+                {
+                    commands.AddRange(BulkReplicationCommands.ErmToFacts
+                        .Where(x => IsTenantConfigured(x, tenants)));
+                    commands.Add(SchemaInitializationCommands.ErmFacts);
+                }
+                
+                var flows = ParseFlows(args);
+                if (flows.Count != 0)
+                {
+                    commands.AddRange(BulkReplicationCommands.KafkaToFacts
+                        .Where(x => flows.Contains(x.MessageFlow)));
+                    commands.AddRange(SchemaInitializationCommands.KafkaFacts
+                        .Where(x => flows.Contains(x.Key))
+                        .Select(x => x.Value));
+                }
             }
 
             if (args.Contains("-aggregates"))
@@ -55,7 +62,7 @@ namespace NuClear.ValidationRules.StateInitialization.Host
             if (args.Contains("-messages"))
             {
                 commands.AddRange(BulkReplicationCommands.ErmToMessages
-                    .Where(x => IsConfigured(x, tenants)));
+                    .Where(x => IsTenantConfigured(x, tenants)));
                 commands.Add(BulkReplicationCommands.AggregatesToMessages);
                 commands.Add(SchemaInitializationCommands.Messages);
             }
@@ -75,11 +82,7 @@ namespace NuClear.ValidationRules.StateInitialization.Host
             var kafkaReplicationActor = new KafkaReplicationActor(ConnectionStringSettings,
                 kafkaMessageFlowReceiverFactory,
                 new KafkaMessageFlowInfoProvider(kafkaSettingsFactory),
-                new IBulkCommandFactory<ConsumeResult<Ignore, byte[]>>[]
-                {
-                    new AmsFactsBulkCommandFactory(kafkaSettingsFactory),
-                    new RulesetFactsBulkCommandFactory(kafkaSettingsFactory)
-                },
+                new KafkaFactsBulkCommandFactory(kafkaSettingsFactory),
                 tracer);
 
             var schemaInitializationActor = new SchemaInitializationActor(ConnectionStringSettings);
@@ -119,21 +122,26 @@ namespace NuClear.ValidationRules.StateInitialization.Host
                 .Build;
         }
 
-        private static IReadOnlyCollection<Tenant> ParseTenants(IEnumerable<string> args)
-        {
-            var tenants = args.Where(x => x.StartsWith("-tenants="))
+        private static IReadOnlyCollection<IMessageFlow> ParseFlows(IEnumerable<string> args) =>
+            args.Where(x => x.StartsWith("-flows="))
+                .SelectMany(x => x.Replace("-flows=", "").Split(','))
+                .Select(x => (IMessageFlow)(x.ToUpperInvariant() switch
+                {
+                    "AMSFACTSFLOW" => AmsFactsFlow.Instance,
+                    "RULESETFACTSFLOW" => RulesetFactsFlow.Instance,
+                    "INFORUSSIAFACTSFLOW" => InfoRussiaFactsFlow.Instance,
+                    "FIJIFACTSFLOW" => FijiFactsFlow.Instance,
+                    _ => throw new NotSupportedException($"Unsupported flow {x}")
+                })).ToHashSet();
+
+        private static IReadOnlyCollection<Tenant> ParseTenants(IEnumerable<string> args) =>
+            args.Where(x => x.StartsWith("-tenants="))
                 .SelectMany(x => x.Replace("-tenants=", "").Split(','))
                 .Select(x => Enum.Parse(typeof(Tenant), x))
                 .Cast<Tenant>()
-                .ToList();
+                .ToHashSet();
 
-            if (tenants.Count == 0)
-                tenants.AddRange(Enum.GetValues(typeof(Tenant)).Cast<Tenant>());
-
-            return new HashSet<Tenant>(tenants);
-        }
-
-        private static bool IsConfigured(ReplicateInBulkCommand command, IEnumerable<Tenant> tenants)
+        private static bool IsTenantConfigured(ReplicateInBulkCommand command, IEnumerable<Tenant> tenants)
             => command.SourceStorageDescriptor.Tenant.HasValue &&
                 tenants.Contains(command.SourceStorageDescriptor.Tenant.Value);
     }

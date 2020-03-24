@@ -31,11 +31,6 @@ namespace NuClear.ValidationRules.StateInitialization.Host
                 typeof(Facts::CostPerClickCategoryRestriction),
                 typeof(Facts::Deal),
                 typeof(Facts::EntityName),
-                typeof(Facts::Firm),
-                typeof(Facts::FirmInactive),
-                typeof(Facts::FirmAddress),
-                typeof(Facts::FirmAddressInactive),
-                typeof(Facts::FirmAddressCategory),
                 typeof(Facts::LegalPerson),
                 typeof(Facts::LegalPersonProfile),
                 typeof(Facts::NomenclatureCategory),
@@ -65,6 +60,7 @@ namespace NuClear.ValidationRules.StateInitialization.Host
         internal static readonly Type[] AmsFactTypes =
             {
                 typeof(Facts::Advertisement),
+                
                 typeof(Facts::EntityName)
             };
 
@@ -77,6 +73,22 @@ namespace NuClear.ValidationRules.StateInitialization.Host
                 typeof(Facts::Ruleset.RulesetProject)
             };
 
+        internal static readonly Type[] InfoRussiaFactTypes =
+        {
+            typeof(Facts::Firm),
+            typeof(Facts::FirmInactive),
+            typeof(Facts::FirmAddress),
+            typeof(Facts::FirmAddressInactive),
+            typeof(Facts::FirmAddressCategory),
+            
+            typeof(Facts::EntityName)
+        };
+
+        internal static readonly Type[] FijiFactTypes =
+        {
+            typeof(Facts::Building),
+        };
+        
         public static readonly Type[] AggregateTypes =
             {
                 typeof(PriceAggregates::Firm),
@@ -171,7 +183,11 @@ namespace NuClear.ValidationRules.StateInitialization.Host
             };
 
         public static readonly IReadOnlyCollection<Type> KafkaFactTypes =
-            AmsFactTypes.Concat(RulesetFactTypes).ToHashSet();
+            AmsFactTypes
+                .Concat(RulesetFactTypes)
+                .Concat(InfoRussiaFactTypes)
+                .Concat(FijiFactTypes)
+                .ToHashSet();
 
         public static readonly IReadOnlyCollection<Type> AllFactTypes =
             ErmFactTypes.Concat(KafkaFactTypes).ToHashSet();

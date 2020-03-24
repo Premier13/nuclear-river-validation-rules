@@ -41,12 +41,17 @@ function Get-EntryPointsMetadata ($EntryPoints, $Context) {
 function Get-BulkToolMetadata ($updateSchemas, $Context){
 	$metadata = @{}
 
-	$arguments = @("-tenants=$($Context.Tenants -join ',')")
-	if($updateSchemas -contains 'ErmFacts') {
-		$arguments += @('-erm-facts', '-aggregates', '-messages')
+	$arguments = @()
+
+	if ($Context.Tenants) {
+		$arguments += @("-tenants=$($Context.Tenants -join ',')")
 	}
-	if($updateSchemas -contains 'KafkaFacts') {
-		$arguments += @('-kafka-facts', '-aggregates', '-messages')
+	if ($Context.Flows) {
+		$arguments += @("-flows=$($Context.Flows -join ',')")
+	}
+	
+	if($updateSchemas -contains 'Facts') {
+		$arguments += @('-facts', '-aggregates', '-messages')
 	}
 	if($updateSchemas -contains 'Aggregates') {
 		$arguments += @('-aggregates', '-messages')
@@ -119,9 +124,8 @@ function Parse-EnvironmentMetadata ($Properties) {
 			'EnvType' = $Properties.EnvironmentType
 		}
 
-		if($Properties.Tenants) {
-			$context.Tenants = $Properties.Tenants.Split(',')
-		}
+		$context.Tenants = $Properties.Tenants.Split(',', [System.StringSplitOptions]::RemoveEmptyEntries)
+		$context.Flows = $Properties.Flows.Split(',', [System.StringSplitOptions]::RemoveEmptyEntries)
 
 		# Используется для именования AppPool сайтов
 		$context.EnvironmentName = "$($context.EnvType)"

@@ -84,38 +84,6 @@ namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
                 new PositionChild { MasterPositionId = 1, ChildPositionId = 1 });
 
         // ReSharper disable once UnusedMember.Local
-        private static ArrangeMetadataElement FirmFacts
-            => ArrangeMetadataElement.Config
-                .Name(nameof(FirmFacts))
-                .Erm(
-                    new Erm::Firm { Id = 1, OrganizationUnitId = 1, IsActive = true, IsDeleted = false, ClosedForAscertainment = false, Name = "one" },
-                    new Erm::Firm { Id = 2, OrganizationUnitId = 1, IsActive = false, IsDeleted = true, ClosedForAscertainment = false, Name = "two" },
-                    new Erm::Firm { Id = 3, OrganizationUnitId = 1, IsActive = false, IsDeleted = false, ClosedForAscertainment = true, Name = "three" },
-                    new Erm::Project{ Id = 2, OrganizationUnitId = 1, IsActive = true, DisplayName="project"}
-                    )
-                .Fact(
-                    new Firm { Id = 1, ProjectId = 2},
-                    new FirmInactive { Id = 2, IsActive = false, IsDeleted = true, IsClosedForAscertainment = false },
-                    new FirmInactive { Id = 3, IsActive = false, IsDeleted = false, IsClosedForAscertainment = true },
-                    new EntityName { EntityType = EntityTypeIds.Firm, Id = 1, Name = "one" },
-                    new EntityName { EntityType = EntityTypeIds.Firm, Id = 2, Name = "two" },
-                    new EntityName { EntityType = EntityTypeIds.Firm, Id = 3, Name = "three" },
-                    new EntityName { EntityType = EntityTypeIds.Project, Id = 2, Name = "project"});
-
-        // ReSharper disable once UnusedMember.Local
-        private static ArrangeMetadataElement FirmAddressFacts
-            => ArrangeMetadataElement.Config
-                .Name(nameof(FirmAddressFacts))
-                .Erm(
-                    new Erm::FirmAddress { Id = 1, IsActive = true, IsDeleted = false, ClosedForAscertainment = false, IsLocatedOnTheMap = true },
-                    new Erm::FirmAddress { Id = 2, IsActive = false, IsDeleted = true, ClosedForAscertainment = false },
-                    new Erm::FirmAddress { Id = 3, IsActive = false, IsDeleted = false, ClosedForAscertainment = true })
-                .Fact(
-                    new FirmAddress { Id = 1, IsLocatedOnTheMap = true },
-                    new FirmAddressInactive { Id = 2, IsActive = false, IsDeleted = true, IsClosedForAscertainment = false },
-                    new FirmAddressInactive { Id = 3, IsActive = false, IsDeleted = false, IsClosedForAscertainment = true });
-
-        // ReSharper disable once UnusedMember.Local
         private static ArrangeMetadataElement BillFacts
         => ArrangeMetadataElement.Config
             .Name(nameof(BillFacts))
@@ -133,16 +101,6 @@ namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
                 new Erm::Bargain { Id = 1, IsActive = true, IsDeleted = false })
             .Fact(
                 new Bargain { Id = 1 });
-
-        // ReSharper disable once UnusedMember.Local
-        private static ArrangeMetadataElement CategoryFirmAddressFacts
-        => ArrangeMetadataElement.Config
-            .Name(nameof(CategoryFirmAddressFacts))
-            .Erm(
-                new Erm::FirmAddress { Id = 1, IsActive = true },
-                new Erm::CategoryFirmAddress { FirmAddressId = 1, CategoryId = 1, IsActive = true, IsDeleted = false })
-            .Fact(
-                new FirmAddressCategory { FirmAddressId = 1, CategoryId = 1 });
 
         // ReSharper disable once UnusedMember.Local
         private static ArrangeMetadataElement OrderFileFacts

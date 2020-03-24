@@ -55,13 +55,13 @@ namespace NuClear.ValidationRules.StateInitialization.Host.Kafka
 
         private void ExecuteBulkReplace(IEnumerable<object> sourceDtos)
         {
-            var replaceDataObjectCommand = new[] {new ReplaceDataObjectCommand(DataObjectType, sourceDtos)};
+            var syncInMemoryDataObjectCommands = new[] {new SyncInMemoryDataObjectCommand(DataObjectType, sourceDtos)};
 
-            var findSpecification = _dataObjectAccessor.GetFindSpecification(replaceDataObjectCommand);
+            var findSpecification = _dataObjectAccessor.GetFindSpecification(syncInMemoryDataObjectCommands);
             var predicate = (Expression<Func<TDataObject, bool>>)PredicateInfo.GetValue(findSpecification);
             _table.Delete(predicate);
 
-            var dataObjects = _dataObjectAccessor.GetDataObjects(replaceDataObjectCommand);
+            var dataObjects = _dataObjectAccessor.GetDataObjects(syncInMemoryDataObjectCommands);
 
             try
             {

@@ -54,6 +54,15 @@ namespace NuClear.ValidationRules.Storage
                    .HasSchemaName(FactsSchema)
                    .HasPrimaryKey(x => x.Id);
 
+            builder.Entity<Building>()
+                   .HasSchemaName(FactsSchema)
+                   .HasPrimaryKey(x => x.Id);
+
+            builder.Entity<BuildingBulkDelete>()
+                   .HasSchemaName(FactsSchema)
+                   .HasTableName(nameof(Building))
+                   .HasPrimaryKey(x => x.Id);
+
             builder.Entity<Category>()
                    .HasSchemaName(FactsSchema)
                    .HasPrimaryKey(x => x.Id);
@@ -87,6 +96,7 @@ namespace NuClear.ValidationRules.Storage
                    .HasSchemaName(FactsSchema)
                    .HasPrimaryKey(x => x.Id)
                    .HasIndex(x => x.FirmId)
+                   .HasIndex(x => x.BuildingId)
                    .HasIndex(x => x.IsLocatedOnTheMap);
 
             builder.Entity<FirmAddressInactive>()
@@ -95,7 +105,8 @@ namespace NuClear.ValidationRules.Storage
 
             builder.Entity<FirmAddressCategory>()
                    .HasSchemaName(FactsSchema)
-                   .HasPrimaryKey(x => new { x.FirmAddressId, x.CategoryId });
+                   .HasPrimaryKey(x => new { x.FirmAddressId, x.CategoryId })
+                   .HasIndex(x => x.CategoryId);
 
             builder.Entity<LegalPerson>()
                    .HasSchemaName(FactsSchema)

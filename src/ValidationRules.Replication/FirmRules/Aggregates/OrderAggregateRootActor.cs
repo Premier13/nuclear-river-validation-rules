@@ -368,15 +368,14 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
                         : !faInactive.IsActive ? InvalidFirmAddressState.NotActive
                         : faInactive.IsClosedForAscertainment ? InvalidFirmAddressState.ClosedForAscertainment
                         : InvalidFirmAddressState.NotSet
-                    from fa in _query.For<Facts::FirmAddress>().Where(x => x.Id == opa.FirmAddressId.Value)
-                        .DefaultIfEmpty()
+                    from fa in _query.For<Facts::FirmAddress>().Where(x => x.Id == opa.FirmAddressId.Value).DefaultIfEmpty()
+                    from building in _query.For<Facts::Building>().Where(x => x.Id == fa.BuildingId).DefaultIfEmpty()
                     let state2 = fa == default
                         ? InvalidFirmAddressState.NotSet
                         : fa.FirmId != order.FirmId && !isPartnerAddress
                             ? InvalidFirmAddressState.NotBelongToFirm
-                            : checkPoi && fa.BuildingPurposeCode.HasValue &&
-                              Facts::FirmAddress.InvalidBuildingPurposeCodesForPoi.Contains(
-                                  fa.BuildingPurposeCode.Value)
+                            : checkPoi && Facts::FirmAddress.InvalidBuildingPurposeCodesForPoi.Contains(
+                                building.PurposeCode)
                                 ? InvalidFirmAddressState.InvalidBuildingPurpose
                                 : checkPoi && fa.EntranceCode == null
                                     ? InvalidFirmAddressState.MissingEntrance
@@ -421,14 +420,24 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
             
             public IQueryable<Order.InvalidCategory> GetSource()
             {
+                var addressCategories =
+                    _query.For<Facts::FirmAddressCategory>().Union(
+                        from cfa in _query.For<Facts::FirmAddressCategory>()
+                        from category in _query.For<Facts::Category>().Where(x => x.Id == cfa.CategoryId)
+                        select new Facts.FirmAddressCategory
+                        {
+                            FirmAddressId = cfa.FirmAddressId,
+                            CategoryId = category.L1Id.Value
+                        });
+                
                 var result = 
-                    from order in _query.For<Facts::Order>()
+                    (from order in _query.For<Facts::Order>()
                     from opa in _query.For<Facts::OrderPositionAdvertisement>().Where(x => x.CategoryId.HasValue).Where(x => x.OrderId == order.Id)
                     from category in _query.For<Facts::Category>().Where(x => x.Id == opa.CategoryId.Value)
                     from position in _query.For<Facts::Position>().Where(x => !x.IsDeleted).Where(x => x.Id == opa.PositionId)
                     let categoryBelongToFirm = (from fa in _query.For<Facts::FirmAddress>().Where(x => x.FirmId == order.FirmId)
-                                                from cfa in _query.For<Facts::FirmAddressCategory>().Where(x => x.FirmAddressId == fa.Id && x.CategoryId == opa.CategoryId.Value)
-                                                select fa.Id).Any()
+                                                from addressCategory in addressCategories.Where(x => x.FirmAddressId == fa.Id && x.CategoryId == opa.CategoryId.Value)
+                                                select addressCategory).Any()
                     let state = !category.IsActiveNotDeleted ? InvalidCategoryState.Inactive
                         : !categoryBelongToFirm ? InvalidCategoryState.NotBelongToFirm
                         : InvalidCategoryState.NotSet
@@ -441,7 +450,7 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
                             PositionId = opa.PositionId,
                             MayNotBelongToFirm = position.BindingObjectType == Facts::Position.BindingObjectTypeCategoryMultipleAsterisk || opa.CategoryId.Value == Facts::Category.CategoryIdProducts,
                             State = state,
-                        };
+                        }).Distinct();
 
                 return result;
             }
@@ -453,6 +462,7 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
             }
         }
         
+        // TODO: объединить с предыдущей проверкой, как это уже сделано для адресов
         public sealed class CategoryNotBelongsToAddressAccessor : DataChangesHandler<Order.CategoryNotBelongsToAddress>, IStorageBasedDataObjectAccessor<Order.CategoryNotBelongsToAddress>
         {
             private readonly IQuery _query;
@@ -470,13 +480,22 @@ namespace NuClear.ValidationRules.Replication.FirmRules.Aggregates
             
             public IQueryable<Order.CategoryNotBelongsToAddress> GetSource()
             {
+                var addressCategories =
+                    _query.For<Facts::FirmAddressCategory>().Union(
+                        from cfa in _query.For<Facts::FirmAddressCategory>()
+                        from category in _query.For<Facts::Category>().Where(x => x.Id == cfa.CategoryId)
+                        select new Facts.FirmAddressCategory
+                        {
+                            FirmAddressId = cfa.FirmAddressId,
+                            CategoryId = category.L1Id.Value
+                        });
+
                 var result =
                     from opa in _query.For<Facts::OrderPositionAdvertisement>()
                         .Where(x => x.FirmAddressId != null && x.CategoryId != null)
-                    from cfa in _query.For<Facts::FirmAddressCategory>().Where(x =>
-                            x.FirmAddressId == opa.FirmAddressId.Value && x.CategoryId == opa.CategoryId.Value)
+                    from addressCategory in addressCategories.Where(x => x.FirmAddressId == opa.FirmAddressId.Value && x.CategoryId == opa.CategoryId.Value)
                         .DefaultIfEmpty()
-                    where cfa == null
+                    where addressCategory == null
                     select new Order.CategoryNotBelongsToAddress
                     {
                         OrderId = opa.OrderId,

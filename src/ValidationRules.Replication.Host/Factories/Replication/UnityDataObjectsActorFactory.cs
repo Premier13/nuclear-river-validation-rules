@@ -27,11 +27,6 @@ namespace NuClear.ValidationRules.Replication.Host.Factories.Replication
             typeof(CategoryOrganizationUnit),
             typeof(CostPerClickCategoryRestriction),
             typeof(Deal),
-            typeof(Firm),
-            typeof(FirmInactive),
-            typeof(FirmAddress),
-            typeof(FirmAddressInactive),
-            typeof(FirmAddressCategory),
             typeof(LegalPerson),
             typeof(LegalPersonProfile),
             typeof(NomenclatureCategory),
@@ -57,14 +52,28 @@ namespace NuClear.ValidationRules.Replication.Host.Factories.Replication
             typeof(UnlimitedOrder),
         };
 
-        private static readonly HashSet<Type> ReplaceDataObjectsActorTypes = new HashSet<Type>
+        private static readonly HashSet<Type> SyncInMemoryDataObjectsActorTypes = new HashSet<Type>
         {
             typeof(Advertisement),
+            
             typeof(Ruleset),
             typeof(Ruleset.AssociatedRule),
             typeof(Ruleset.DeniedRule),
             typeof(Ruleset.QuantitativeRule),
-            typeof(Ruleset.RulesetProject)
+            typeof(Ruleset.RulesetProject),
+            
+            typeof(Firm),
+            typeof(FirmInactive),
+            typeof(FirmAddress),
+            typeof(FirmAddressInactive),
+            typeof(FirmAddressCategory),
+            
+            typeof(Building),
+        };
+
+        private static readonly HashSet<Type> DeleteInMemoryDataObjectsActorTypes = new HashSet<Type>
+        {
+            typeof(BuildingBulkDelete),
         };
 
         public UnityDataObjectsActorFactory(IUnityContainer unityContainer) => _unityContainer = unityContainer;
@@ -77,9 +86,12 @@ namespace NuClear.ValidationRules.Replication.Host.Factories.Replication
                 if (SyncDataObjectsActorTypes.Contains(x))
                 {
                     actorTypeDefinition = typeof(SyncDataObjectsActor<>);
-                } else if (ReplaceDataObjectsActorTypes.Contains(x))
+                } else if (SyncInMemoryDataObjectsActorTypes.Contains(x))
                 {
-                    actorTypeDefinition = typeof(ReplaceDataObjectsActor<>);
+                    actorTypeDefinition = typeof(SyncInMemoryDataObjectsActor<>);
+                } else if (DeleteInMemoryDataObjectsActorTypes.Contains(x))
+                {
+                    actorTypeDefinition = typeof(DeleteInMemoryDataObjectsActor<>);
                 } else throw new ArgumentException($"Unkown data object type {x.FullName}");
 
                 return actorTypeDefinition.MakeGenericType(x);

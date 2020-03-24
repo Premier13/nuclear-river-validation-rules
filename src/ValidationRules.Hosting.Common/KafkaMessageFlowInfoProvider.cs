@@ -23,18 +23,11 @@ namespace NuClear.ValidationRules.Hosting.Common
             var settings = _kafkaSettingsFactory.CreateReceiverSettings(messageFlow);
             using var consumer = new ConsumerBuilder<Ignore, Ignore>(settings.Config).Build();
 
-            var topicPartitions = GetTopicPartitions(settings.Topics);
+            var topicPartitions = GetTopicPartitions(settings.TopicPartitionOffsets.Select(x => x.Topic));
             var stats = consumer.Committed(topicPartitions, settings.PollTimeout).Select(x =>
             {
                 var offsets = consumer.QueryWatermarkOffsets(x.TopicPartition, settings.PollTimeout);
-                return new MessageFlowStats
-                {
-                    TopicPartition = x.TopicPartition,
-                    
-                    End = offsets.High,
-                    Offset = x.Offset,
-                    Lag = offsets.High - (x.Offset > 0 ? x.Offset : 0),
-                };
+                return new MessageFlowStats(x.TopicPartition, offsets.High, x.Offset);
             }).ToList();
             
             return stats;
@@ -44,7 +37,7 @@ namespace NuClear.ValidationRules.Hosting.Common
         public ConsumeResult<Ignore, Ignore> TryGetFlowLastMessage(IMessageFlow messageFlow, int partitionId = 0)
         {
             var settings = _kafkaSettingsFactory.CreateReceiverSettings(messageFlow);
-            var topicPartition = new TopicPartition(settings.Topics.Single(), partitionId);
+            var topicPartition = new TopicPartition(settings.TopicPartitionOffsets.Single().Topic, partitionId);
 
             using var consumer = new ConsumerBuilder<Ignore, Ignore>(settings.Config).Build();
             var offsets = consumer.QueryWatermarkOffsets(topicPartition, settings.PollTimeout);
@@ -70,13 +63,15 @@ namespace NuClear.ValidationRules.Hosting.Common
         {
             _adminClient.Dispose();
         }
-        
-        public struct MessageFlowStats
-        {
-            public TopicPartition TopicPartition { get; set; }
-            public long End { get; set; }
-            public long Offset { get; set; }            
-            public long Lag { get; set; }
-        }
+    }
+    
+    public struct MessageFlowStats
+    {
+        public MessageFlowStats(TopicPartition topicPartition, long end, long offset) =>
+            (TopicPartition, End, Offset) = (topicPartition, end, offset);
+        public TopicPartition TopicPartition { get; }
+        public long End { get; }
+        public long Offset { get; }
+        public long Lag => End - (Offset > 0 ? Offset : 0);
     }
 }

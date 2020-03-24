@@ -30,7 +30,7 @@ namespace NuClear.ValidationRules.StateInitialization.Host.Kafka
         private readonly IConnectionStringSettings _connectionStringSettings;
         private readonly IKafkaMessageFlowReceiverFactory _receiverFactory;
         private readonly KafkaMessageFlowInfoProvider _kafkaMessageFlowInfoProvider;
-        private readonly IReadOnlyCollection<IBulkCommandFactory<ConsumeResult<Ignore, byte[]>>> _commandFactories;
+        private readonly IBulkCommandFactory<ConsumeResult<Ignore, byte[]>> _commandFactory;
         private readonly ITracer _tracer;
 
         private readonly IAccessorTypesProvider _accessorTypesProvider = new InMemoryAccessorTypesProvider();
@@ -39,13 +39,13 @@ namespace NuClear.ValidationRules.StateInitialization.Host.Kafka
             IConnectionStringSettings connectionStringSettings,
             IKafkaMessageFlowReceiverFactory kafkaMessageFlowReceiverFactory,
             KafkaMessageFlowInfoProvider kafkaMessageFlowInfoProvider,
-            IReadOnlyCollection<IBulkCommandFactory<ConsumeResult<Ignore, byte[]>>> commandFactories,
+            IBulkCommandFactory<ConsumeResult<Ignore, byte[]>> commandFactory,
             ITracer tracer)
         {
             _connectionStringSettings = connectionStringSettings;
             _receiverFactory = kafkaMessageFlowReceiverFactory;
             _kafkaMessageFlowInfoProvider = kafkaMessageFlowInfoProvider;
-            _commandFactories = commandFactories;
+            _commandFactory = commandFactory;
             _tracer = tracer;
         }
 
@@ -94,22 +94,18 @@ namespace NuClear.ValidationRules.StateInitialization.Host.Kafka
                                           BulkCopyTimeout = bulkReplaceCommandTimeoutSec
                                       });
 
-            var initialStats = _kafkaMessageFlowInfoProvider.GetFlowStats(messageFlow).ToDictionary(x => x.TopicPartition);
-            
+            var initialStats = _kafkaMessageFlowInfoProvider.GetFlowStats(messageFlow)
+                .ToDictionary(x => x.TopicPartition, x => new MessageFlowStats (x.TopicPartition, x.End, Offset.Unset));
+
             using var receiver = _receiverFactory.Create(messageFlow);
 
             while(true)
             {
                 var batch = receiver.ReceiveBatch(batchSize);
-                if (batch.Count == 0)
-                {
-                    break;
-                }
                 
-                var bulkCommands = _commandFactories.SelectMany(factory => factory.CreateCommands(batch)).ToList();
+                var bulkCommands = _commandFactory.CreateCommands(batch);
                 if (bulkCommands.Count > 0)
                 {
-                    
                     using var scope = new TransactionScope(TransactionScopeOption.RequiresNew, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable, Timeout = TimeSpan.Zero });
                     foreach (var actor in actors)
                     {
@@ -119,15 +115,27 @@ namespace NuClear.ValidationRules.StateInitialization.Host.Kafka
                 }
 
                 receiver.CompleteBatch(batch);
-                
-                var stats = _kafkaMessageFlowInfoProvider.GetFlowStats(messageFlow);
-                foreach (var stat in stats)
+
+                var batchStats = batch
+                    .GroupBy(x => x.TopicPartition)
+                    .ToDictionary(x => x.Key, x => x.Max(y => y.Offset.Value));
+                foreach (var batchStat in batchStats)
                 {
-                    _tracer.Info($"Topic {stat.TopicPartition}, End: {stat.End}, Offset: {stat.Offset}, Lag: {stat.Lag}");
+                    if (!initialStats.TryGetValue(batchStat.Key, out var initialStat))
+                    {
+                        throw new KeyNotFoundException(batchStat.Key.ToString());
+                    }
+
+                    var currentStat = new MessageFlowStats(batchStat.Key, initialStat.End, batchStat.Value + 1);
+                    _tracer.Info($"Topic {currentStat.TopicPartition}, End: {currentStat.End}, Offset: {currentStat.Offset}, Lag: {currentStat.Lag}");
+                    
+                    initialStats[batchStat.Key] = currentStat;
                 }
 
-                if (stats.All(x => x.End == 0 || initialStats[x.TopicPartition].End <= x.Offset))
+                var complete = initialStats.Values.All(x => x.Lag <= 0); 
+                if (complete)
                 {
+                    _tracer.Info($"Kafka state init for flow {messageFlow.Description} complete");
                     break;
                 }
             }

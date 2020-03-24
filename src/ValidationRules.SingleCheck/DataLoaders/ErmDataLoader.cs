@@ -242,9 +242,6 @@ namespace NuClear.ValidationRules.SingleCheck.DataLoaders
             store.AddRange(nomenclatureCategories);
 
             LoadAmountControlledSales(query, order, usedPriceIds, store);
-            LoadFirm(query, order, firmAddressIds, store);
-            LoadBuyHere(query, order, store);
-            LoadPoi(query, order, store);
 
             orderSummary = new ResolvedOrderSummary
             {
@@ -256,29 +253,6 @@ namespace NuClear.ValidationRules.SingleCheck.DataLoaders
                 SoldPackagesIds = soldPackagesIds,
                 SoldPackageElementsIds = soldPackageElementsIds
             };
-        }
-
-        private static void LoadFirm(DataConnection query, Order order, IReadOnlyCollection<long> additionalFirmIds, IStore store)
-        {
-            var firms =
-                query.GetTable<Firm>()
-                     .Where(x => x.Id == order.FirmId)
-                     .Execute();
-            store.AddRange(firms);
-            var firmIds = firms.Select(x => x.Id);
-
-            var firmAddresses =
-                query.GetTable<FirmAddress>().Where(x => firmIds.Contains(x.FirmId))
-                    .Union(query.GetTable<FirmAddress>().Where(x => additionalFirmIds.Contains(x.Id)))
-                    .Execute();
-            store.AddRange(firmAddresses);
-            var firmAddressIds = firmAddresses.Select(y => y.Id).ToList();
-
-            var categoryFirmAddresses =
-                query.GetTable<CategoryFirmAddress>()
-                     .Where(x => firmAddressIds.Contains(x.FirmAddressId))
-                     .Execute();
-            store.AddRange(categoryFirmAddresses);
         }
 
         private static void LoadReleaseWithdrawals(DataConnection query, Order order, IStore store)

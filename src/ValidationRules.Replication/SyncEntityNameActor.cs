@@ -59,14 +59,14 @@ namespace NuClear.ValidationRules.Replication
             }
 
             // memory accessors
-            var replaceDataObjectCommands = commands.OfType<IReplaceDataObjectCommand>().ToList();
-            if (replaceDataObjectCommands.Count != 0)
+            var syncInMemoryDataObjectCommands = commands.OfType<ISyncInMemoryDataObjectCommand>().ToList();
+            if (syncInMemoryDataObjectCommands.Count != 0)
             {
                 foreach (var accessor in CreateMemoryAccessors())
                 {
-                    var specification = accessor.GetFindSpecification(replaceDataObjectCommands);
+                    var specification = accessor.GetFindSpecification(syncInMemoryDataObjectCommands);
 
-                    var source = accessor.GetDataObjects(replaceDataObjectCommands);
+                    var source = accessor.GetDataObjects(syncInMemoryDataObjectCommands);
                     var target = _query.For<EntityName>().WhereMatched(specification);
 
                     var changes = _dataChangesDetector.DetectChanges(source, target);
@@ -88,8 +88,6 @@ namespace NuClear.ValidationRules.Replication
             return new IStorageBasedDataObjectAccessor<EntityName>[]
             {
                 new CategoryNameAccessor(query),
-                new FirmNameAccessor(query),
-                new FirmAddressNameAccessor(query),
                 new LegalPersonProfileNameAccessor(query),
                 new OrderNameAccessor(query),
                 new PositionNameAccessor(query),
@@ -101,9 +99,10 @@ namespace NuClear.ValidationRules.Replication
 
         private static IEnumerable<IMemoryBasedDataObjectAccessor<EntityName>> CreateMemoryAccessors()
         {
-            return new[]
+            return new IMemoryBasedDataObjectAccessor<EntityName>[]
             {
                 new AdvertisementNameAccessor(null),
+                new FirmNameAccessor(null),
             };
         }
 
@@ -126,48 +125,6 @@ namespace NuClear.ValidationRules.Replication
                 => SyncEntityNameActor.GetFindSpecification(commands,
                     typeof(Category),
                     EntityTypeIds.Category);
-        }
-
-        public sealed class FirmNameAccessor : IStorageBasedDataObjectAccessor<EntityName>
-        {
-            private readonly IQuery _query;
-
-            public FirmNameAccessor(IQuery query) => _query = query;
-
-            public IQueryable<EntityName> GetSource() => _query
-                .For(Specs.Find.Erm.Firm.All)
-                .Select(x => new EntityName
-                {
-                    Id = x.Id,
-                    EntityType = EntityTypeIds.Firm,
-                    Name = x.Name
-                });
-
-            public FindSpecification<EntityName> GetFindSpecification(IReadOnlyCollection<ICommand> commands)
-                => SyncEntityNameActor.GetFindSpecification(commands,
-                    typeof(Firm),
-                    EntityTypeIds.Firm);
-        }
-
-        public sealed class FirmAddressNameAccessor : IStorageBasedDataObjectAccessor<EntityName>
-        {
-            private readonly IQuery _query;
-
-            public FirmAddressNameAccessor(IQuery query) => _query = query;
-
-            public IQueryable<EntityName> GetSource() => _query
-                .For(Specs.Find.Erm.FirmAddress.All)
-                .Select(x => new EntityName
-                {
-                    Id = x.Id,
-                    EntityType = EntityTypeIds.FirmAddress,
-                    Name = x.Address
-                });
-
-            public FindSpecification<EntityName> GetFindSpecification(IReadOnlyCollection<ICommand> commands)
-                => SyncEntityNameActor.GetFindSpecification(commands,
-                    typeof(FirmAddress),
-                    EntityTypeIds.FirmAddress);
         }
 
         public sealed class LegalPersonProfileNameAccessor : IStorageBasedDataObjectAccessor<EntityName>
@@ -307,9 +264,9 @@ namespace NuClear.ValidationRules.Replication
             public IReadOnlyCollection<EntityName> GetDataObjects(IEnumerable<ICommand> commands)
             {
                 var dtos = commands
-                    .Cast<ReplaceDataObjectCommand>()
+                    .Cast<SyncInMemoryDataObjectCommand>()
                     .SelectMany(x => x.Dtos)
-                    .Cast<AdvertisementDto>()
+                    .OfType<AdvertisementDto>()
                     .GroupBy(x => x.Id)
                     .Select(x => x.Aggregate((a,b) => a.Offset > b.Offset ? a : b));
 
@@ -323,12 +280,43 @@ namespace NuClear.ValidationRules.Replication
 
             public FindSpecification<EntityName> GetFindSpecification(IEnumerable<ICommand> commands)
             {
-                var ids = commands.Cast<ReplaceDataObjectCommand>().SelectMany(x => x.Dtos).Cast<AdvertisementDto>().Select(x => x.Id).ToHashSet();
+                var ids = commands.Cast<SyncInMemoryDataObjectCommand>().SelectMany(x => x.Dtos).OfType<AdvertisementDto>().Select(x => x.Id).ToHashSet();
 
                 return new FindSpecification<EntityName>(x => x.EntityType == EntityTypeIds.Advertisement && ids.Contains(x.Id));
             }
         }
 
+        public sealed class FirmNameAccessor : IMemoryBasedDataObjectAccessor<EntityName>
+        {
+            // ReSharper disable once UnusedParameter.Local
+            public FirmNameAccessor(IQuery query) { }
+
+            public IReadOnlyCollection<EntityName> GetDataObjects(IEnumerable<ICommand> commands)
+            {
+                var dtos = commands
+                    .Cast<SyncInMemoryDataObjectCommand>()
+                    .SelectMany(x => x.Dtos)
+                    .OfType<FirmDto>()
+                    .GroupBy(x => x.Id)
+                    .Select(x => x.Last());
+
+                return dtos
+                    .Where(Specs.Find.InfoRussia.Firm.All)
+                    .Select(x => new EntityName
+                {
+                    Id = x.Id,
+                    EntityType = EntityTypeIds.Firm,
+                    Name = x.Name
+                }).ToList();
+            }
+
+            public FindSpecification<EntityName> GetFindSpecification(IEnumerable<ICommand> commands)
+            {
+                var ids = commands.Cast<SyncInMemoryDataObjectCommand>().SelectMany(x => x.Dtos).OfType<FirmDto>().Select(x => x.Id).ToHashSet();
+                return new FindSpecification<EntityName>(x => x.EntityType == EntityTypeIds.Firm && ids.Contains(x.Id));
+            }
+        }
+        
         private static FindSpecification<EntityName> GetFindSpecification(IReadOnlyCollection<ICommand> commands, Type type, int typeId)
         {
             var ids = commands.Cast<SyncDataObjectCommand>()

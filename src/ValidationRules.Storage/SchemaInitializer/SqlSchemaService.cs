@@ -29,6 +29,15 @@ namespace NuClear.ValidationRules.Storage.SchemaInitializer
             }
         }
 
+        public void DropTables(IEnumerable<Type> dataObjectTypes)
+        {
+            foreach (var dataObjectType in dataObjectTypes)
+            {
+                var tableManager = TableManager.Create(dataObjectType);
+                tableManager.DropTable(_dataConnection);
+            }
+        }
+        
         public void DropTables(IEnumerable<TableSchema> tables)
         {
             foreach (var table in tables)
@@ -53,10 +62,14 @@ namespace NuClear.ValidationRules.Storage.SchemaInitializer
             }
 
             public abstract void CreateTable(DataConnection db);
+            public abstract void DropTable(DataConnection db);
 
             private sealed class TableManagerImpl<T> : TableManager where T : class
             {
-                public override void CreateTable(DataConnection db) => db.CreateTable<T>();
+                public override void CreateTable(DataConnection db) =>
+                    db.CreateTable<T>();
+                public override void DropTable(DataConnection db) =>
+                    db.DropTable<T>();
             }
         }
 

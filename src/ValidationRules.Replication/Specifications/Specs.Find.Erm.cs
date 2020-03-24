@@ -14,31 +14,8 @@ namespace NuClear.ValidationRules.Replication.Specifications
                 public static FindSpecification<Erm::Account> Account { get; }
                     = new FindSpecification<Erm::Account>(x => !x.IsArchived);
                 
-                public static class Firm
-                {
-                    public static FindSpecification<Erm::Firm> Active { get; }
-                        = new FindSpecification<Erm::Firm>(x => x.IsActive && !x.IsDeleted && !x.ClosedForAscertainment);
-
-                    public static FindSpecification<Erm::Firm> Inactive { get; }
-                        = new FindSpecification<Erm::Firm>(x => !(x.IsActive && !x.IsDeleted && !x.ClosedForAscertainment));
-
-                    public static FindSpecification<Erm::Firm> All { get; }
-                        = new FindSpecification<Erm::Firm>(x => true);
-                }
-
                 public static FindSpecification<Erm::Category> Category { get; }
                     = new FindSpecification<Erm::Category>(x => true);
-
-                public static class FirmAddress
-                {
-                    public static FindSpecification<Erm::FirmAddress> Active { get; }
-                        = new FindSpecification<Erm::FirmAddress>(x => x.IsActive && !x.IsDeleted && !x.ClosedForAscertainment);
-
-                    public static FindSpecification<Erm::FirmAddress> Inactive { get; }
-                        = new FindSpecification<Erm::FirmAddress>(x => !(x.IsActive && !x.IsDeleted && !x.ClosedForAscertainment));
-                    public static FindSpecification<Erm::FirmAddress> All { get; }
-                        = new FindSpecification<Erm::FirmAddress>(x => true);
-                }
 
                 public static FindSpecification<Erm::LegalPersonProfile> LegalPersonProfile { get; }
                     = new FindSpecification<Erm::LegalPersonProfile>(x => x.IsActive && !x.IsDeleted);

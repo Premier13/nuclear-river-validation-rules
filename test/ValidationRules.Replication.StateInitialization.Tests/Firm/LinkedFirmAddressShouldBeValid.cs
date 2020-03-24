@@ -38,13 +38,15 @@ namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
                     new Facts::FirmAddressInactive { Id = 4, IsActive = true, IsClosedForAscertainment = true },
 
                     new Facts::OrderPositionAdvertisement {OrderId = 1, OrderPositionId = 1, FirmAddressId = 5, PositionId = 2 },
-                    new Facts::FirmAddress { Id = 5, FirmId = 1, EntranceCode = 1, BuildingPurposeCode = 1},
+                    new Facts::FirmAddress { Id = 5, FirmId = 1, EntranceCode = 1, BuildingId = 1},
+                    new Facts::Building { Id = 1, PurposeCode = 1},
 
                     new Facts::OrderPositionAdvertisement {OrderId = 1, OrderPositionId = 1, FirmAddressId = 6, PositionId = 2 },
-                    new Facts::FirmAddress { Id = 6, FirmId = 1, EntranceCode = null, BuildingPurposeCode = null },
+                    new Facts::FirmAddress { Id = 6, FirmId = 1, EntranceCode = null, BuildingId = null },
 
                     new Facts::OrderPositionAdvertisement {OrderId = 1, OrderPositionId = 1, FirmAddressId = 7, PositionId = 2 },
-                    new Facts::FirmAddress { Id = 7, FirmId = 1, EntranceCode = 1, BuildingPurposeCode = FirmAddress.InvalidBuildingPurposeCodesForPoi.First()},
+                    new Facts::FirmAddress { Id = 7, FirmId = 1, EntranceCode = 1, BuildingId = 2},
+                    new Facts::Building { Id = 2, PurposeCode = FirmAddress.InvalidBuildingPurposeCodesForPoi.First()},
 
                     new Facts::OrderPositionAdvertisement {OrderId = 1, OrderPositionId = 1, FirmAddressId = 8, PositionId = 3},
                     new Facts::FirmAddressInactive { Id = 8 },

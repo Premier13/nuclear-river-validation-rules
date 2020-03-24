@@ -39,7 +39,8 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams
             _syncEntityNameActor = syncEntityNameActor;
             _eventLogger = eventLogger;
             _telemetryPublisher = telemetryPublisher;
-            _appropriateTopics = kafkaSettingsFactory.CreateReceiverSettings(AmsFactsFlow.Instance).Topics;
+            _appropriateTopics = kafkaSettingsFactory.CreateReceiverSettings(AmsFactsFlow.Instance).TopicPartitionOffsets
+                .Select(x => x.Topic).ToHashSet();
         }
 
         protected override AggregatableMessage<ICommand> Process(KafkaMessageBatch batch)
@@ -71,13 +72,16 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams
 
         private void Process(IReadOnlyCollection<AdvertisementDto> dtos)
         {
+            var actors = _dataObjectsActorFactory.Create(new []
+            {
+                typeof(Advertisement)
+            });
+            
             var commands = new[]
             {
-                new ReplaceDataObjectCommand(typeof(Advertisement), dtos)
+                new SyncInMemoryDataObjectCommand(typeof(Advertisement), dtos)
             };
-            var dataObjectTypes = commands.Select(x => x.DataObjectType).ToHashSet();
 
-            var actors = _dataObjectsActorFactory.Create(dataObjectTypes);
             var eventsCollector = new FactsEventCollector();
             foreach (var actor in actors)
             {

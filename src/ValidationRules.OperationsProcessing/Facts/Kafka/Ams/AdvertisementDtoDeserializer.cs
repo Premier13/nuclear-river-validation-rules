@@ -9,8 +9,8 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ams
 {
     public sealed class AdvertisementDtoDeserializer : IDeserializer<ConsumeResult<Ignore, byte[]>, AdvertisementDto>
     {
-        public IEnumerable<AdvertisementDto> Deserialize(IEnumerable<ConsumeResult<Ignore, byte[]>> consumeResults) =>
-            consumeResults
+        public IEnumerable<AdvertisementDto> Deserialize(IEnumerable<ConsumeResult<Ignore, byte[]>> messages) =>
+            messages
                 // filter heartbeat & tombstone messages
                 .Where(x => x.Value != null)
                 .Select(x =>

@@ -84,24 +84,32 @@ function Get-KafkaMetadata($Context){
 			$metadata += @{
 				 'AmsFactsTopic' = 'ams_okapi_prod.am.validity'
 				 'RulesetFactsTopic' = 'casino_staging_flowRulesets_compacted'
+				 'InfoRussiaFactsTopic' = 'casino_staging_flowCards_compacted'
+				 'FijiFactsTopic' = 'casino_staging_flowGeography_compacted'
 			 }
 		}
 		'Test' {
 			$metadata += @{
 				'AmsFactsTopic' = 'ams_okapi_staging.am.validity'
 				'RulesetFactsTopic' = 'casino_staging_flowRulesets_compacted'
+				'InfoRussiaFactsTopic' = 'casino_staging_flowCards_compacted'
+				'FijiFactsTopic' = 'casino_staging_flowGeography_compacted'
 			}
 		}
 		'Business' {
 			$metadata += @{
 				'AmsFactsTopic' = "ams_okapi_business$($Context['Index']).am.validity"
 				'RulesetFactsTopic' = 'erm_business01_flowRulesets'
+				'InfoRussiaFactsTopic' = 'casino_staging_flowCards_compacted'
+				'FijiFactsTopic' = 'casino_staging_flowGeography_compacted'
 			}
 		}
 		'Edu' {
 			$metadata += @{
 				'AmsFactsTopic' = "ams_okapi_edu$($Context['Index']).am.validity"
 				'RulesetFactsTopic' = 'casino_staging_flowRulesets_compacted'
+				'InfoRussiaFactsTopic' = 'casino_staging_flowCards_compacted'
+				'FijiFactsTopic' = 'casino_staging_flowGeography_compacted'
 			}
 		}
 		default {

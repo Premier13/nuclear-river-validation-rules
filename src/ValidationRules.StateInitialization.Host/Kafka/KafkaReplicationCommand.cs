@@ -4,9 +4,9 @@ using NuClear.StateInitialization.Core.Commands;
 
 namespace NuClear.ValidationRules.StateInitialization.Host.Kafka
 {
-    internal sealed class KafkaReplicationCommand : ICommand
+    public sealed class KafkaReplicationCommand : ICommand
     {
-        public KafkaReplicationCommand(IMessageFlow messageFlow, ReplicateInBulkCommand replicateInBulkCommand, int batchSize = 10000)
+        public KafkaReplicationCommand(IMessageFlow messageFlow, ReplicateInBulkCommand replicateInBulkCommand, int batchSize)
         {
             MessageFlow = messageFlow;
             ReplicateInBulkCommand = replicateInBulkCommand;

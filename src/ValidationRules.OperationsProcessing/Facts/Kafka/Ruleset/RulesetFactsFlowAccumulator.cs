@@ -34,7 +34,8 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
             _dataObjectsActorFactory = dataObjectsActorFactory;
             _eventLogger = eventLogger;
             _telemetryPublisher = telemetryPublisher;
-            _appropriateTopics = kafkaSettingsFactory.CreateReceiverSettings(RulesetFactsFlow.Instance).Topics;
+            _appropriateTopics = kafkaSettingsFactory.CreateReceiverSettings(RulesetFactsFlow.Instance).TopicPartitionOffsets
+                .Select(x => x.Topic).ToHashSet();
         }
 
         protected override AggregatableMessage<ICommand> Process(KafkaMessageBatch batch)
@@ -64,17 +65,24 @@ namespace NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset
 
         private void Process(IReadOnlyCollection<RulesetDto> dtos)
         {
+            var actors = _dataObjectsActorFactory.Create(new[]
+            {
+                typeof(Storage.Model.Facts.Ruleset),
+                typeof(Storage.Model.Facts.Ruleset.AssociatedRule),
+                typeof(Storage.Model.Facts.Ruleset.DeniedRule),
+                typeof(Storage.Model.Facts.Ruleset.QuantitativeRule),
+                typeof(Storage.Model.Facts.Ruleset.RulesetProject)
+            });
+
             var commands = new[]
             {
-                new ReplaceDataObjectCommand(typeof(Storage.Model.Facts.Ruleset), dtos),
-                new ReplaceDataObjectCommand(typeof(Storage.Model.Facts.Ruleset.AssociatedRule), dtos),
-                new ReplaceDataObjectCommand(typeof(Storage.Model.Facts.Ruleset.DeniedRule), dtos),
-                new ReplaceDataObjectCommand(typeof(Storage.Model.Facts.Ruleset.QuantitativeRule), dtos),
-                new ReplaceDataObjectCommand(typeof(Storage.Model.Facts.Ruleset.RulesetProject), dtos),
+                new SyncInMemoryDataObjectCommand(typeof(Storage.Model.Facts.Ruleset), dtos),
+                new SyncInMemoryDataObjectCommand(typeof(Storage.Model.Facts.Ruleset.AssociatedRule), dtos),
+                new SyncInMemoryDataObjectCommand(typeof(Storage.Model.Facts.Ruleset.DeniedRule), dtos),
+                new SyncInMemoryDataObjectCommand(typeof(Storage.Model.Facts.Ruleset.QuantitativeRule), dtos),
+                new SyncInMemoryDataObjectCommand(typeof(Storage.Model.Facts.Ruleset.RulesetProject), dtos),
             };
-            var dataObjectTypes = commands.Select(x => x.DataObjectType).ToHashSet();
-
-            var actors = _dataObjectsActorFactory.Create(dataObjectTypes);
+            
             var eventsCollector = new FactsEventCollector();
             foreach (var actor in actors)
             {

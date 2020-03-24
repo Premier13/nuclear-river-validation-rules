@@ -4,14 +4,14 @@ using NuClear.Storage.API.Readings;
 
 namespace NuClear.Replication.Core.DataObjects
 {
-    public sealed class InMemoryEntityChangesProvider<TDataObject> : IChangesProvider<TDataObject>
+    public sealed class EntityInMemoryChangesProvider<TDataObject> : IChangesProvider<TDataObject>
         where TDataObject : class
     {
         private readonly IQuery _query;
         private readonly IMemoryBasedDataObjectAccessor<TDataObject> _memoryBasedDataObjectAccessor;
         private readonly TwoPhaseDataChangesDetector<TDataObject> _dataChangesDetector;
 
-        public InMemoryEntityChangesProvider(IQuery query,
+        public EntityInMemoryChangesProvider(IQuery query,
             IMemoryBasedDataObjectAccessor<TDataObject> memoryBasedDataObjectAccessor,
             IEqualityComparerFactory equalityComparerFactory)
         {

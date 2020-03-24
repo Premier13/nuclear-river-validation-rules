@@ -9,9 +9,9 @@ namespace NuClear.StateInitialization.Core.Factories
 {
     public sealed class StaticAccessorTypesProvider : IAccessorTypesProvider
     {
-        private static readonly Lazy<IReadOnlyDictionary<Type, Type[]>> AccessorTypes = new Lazy<IReadOnlyDictionary<Type, Type[]>>(LoadAccessorTypes);
+        private static readonly Lazy<IReadOnlyDictionary<Type, IReadOnlyCollection<Type>>> AccessorTypes = new Lazy<IReadOnlyDictionary<Type, IReadOnlyCollection<Type>>>(LoadAccessorTypes);
 
-        private static IReadOnlyDictionary<Type, Type[]> LoadAccessorTypes()
+        private static IReadOnlyDictionary<Type, IReadOnlyCollection<Type>> LoadAccessorTypes()
             => AppDomain.CurrentDomain.GetAssemblies()
                         .Where(x => !x.IsDynamic)
                         .SelectMany(SafeGetAssemblyExportedTypes)
@@ -19,7 +19,7 @@ namespace NuClear.StateInitialization.Core.Factories
                         .Where(x => !x.type.IsAbstract && IsAccessor(x.@interface))
                         .Select(x => new { GenericArgument = x.@interface.GetGenericArguments()[0], Type = x.type })
                         .GroupBy(x => x.GenericArgument, x => x.Type)
-                        .ToDictionary(x => x.Key, x => x.Distinct().ToArray());
+                        .ToDictionary(x => x.Key, x => (IReadOnlyCollection<Type>)x.ToHashSet());
 
         private static IEnumerable<Type> SafeGetAssemblyExportedTypes(Assembly assembly)
         {

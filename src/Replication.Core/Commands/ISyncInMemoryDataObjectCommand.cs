@@ -2,7 +2,7 @@
 
 namespace NuClear.Replication.Core.Commands
 {
-    public interface IReplaceDataObjectCommand : ICommand
+    public interface ISyncInMemoryDataObjectCommand : ICommand
     {
         Type DataObjectType { get; }
     }

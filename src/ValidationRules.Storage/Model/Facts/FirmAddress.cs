@@ -28,7 +28,8 @@ namespace NuClear.ValidationRules.Storage.Model.Facts
         public bool IsLocatedOnTheMap { get; set; }
 
         public long? EntranceCode { get; set; }
-        public int? BuildingPurposeCode { get; set; }
+        
+        public long? BuildingId { get; set; }
     }
 
     public sealed class FirmAddressInactive

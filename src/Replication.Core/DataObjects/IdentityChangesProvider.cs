@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using NuClear.Replication.Core.Equality;
 using NuClear.Storage.API.Readings;
 

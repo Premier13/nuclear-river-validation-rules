@@ -8,15 +8,15 @@ using NuClear.Replication.Core.DataObjects;
 
 namespace NuClear.Replication.Core.Actors
 {
-    public sealed class ReplaceDataObjectsActor<TDataObject> : IActor
+    public sealed class SyncInMemoryDataObjectsActor<TDataObject> : IActor
         where TDataObject : class
     {
-        private readonly InMemoryEntityChangesProvider<TDataObject> _changesProvider;
+        private readonly EntityInMemoryChangesProvider<TDataObject> _changesProvider;
         private readonly IBulkRepository<TDataObject> _bulkRepository;
         private readonly IDataChangesHandler<TDataObject> _dataChangesHandler;
 
-        public ReplaceDataObjectsActor(
-            InMemoryEntityChangesProvider<TDataObject> changesProvider,
+        public SyncInMemoryDataObjectsActor(
+            EntityInMemoryChangesProvider<TDataObject> changesProvider,
             IBulkRepository<TDataObject> bulkRepository,
             IDataChangesHandler<TDataObject> dataChangesHandler)
         {
@@ -27,7 +27,7 @@ namespace NuClear.Replication.Core.Actors
 
         public IReadOnlyCollection<IEvent> ExecuteCommands(IReadOnlyCollection<ICommand> commands)
         {
-            var commandsToExecute = commands.OfType<IReplaceDataObjectCommand>()
+            var commandsToExecute = commands.OfType<ISyncInMemoryDataObjectCommand>()
                                             .Where(x => x.DataObjectType == typeof(TDataObject))
                                             .ToHashSet();
             if (commandsToExecute.Count == 0)

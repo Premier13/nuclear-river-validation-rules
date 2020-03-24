@@ -23,13 +23,6 @@ namespace NuClear.ValidationRules.OperationsProcessing
             .AddMapping<EntityTypeCategoryOrganizationUnit>(typeof(Facts::CategoryOrganizationUnit))
             .AddMapping<EntityTypeDeal>(typeof(Facts::Deal))
             
-            .AddMapping<EntityTypeFirm>(typeof(Facts::Firm),
-                                        typeof(Facts::FirmInactive))
-            .AddMapping<EntityTypeFirmAddress>(
-                                        typeof(Facts::FirmAddress),
-                                        typeof(Facts::FirmAddressInactive),
-                                        typeof(Facts::FirmAddressCategory))
-            
             .AddMapping<EntityTypeLegalPerson>(typeof(Facts::LegalPerson))
             .AddMapping<EntityTypeLegalPersonProfile>(typeof(Facts::LegalPersonProfile))
             .AddMapping<EntityTypeOrder>(typeof(Facts::Order),

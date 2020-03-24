@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Confluent.Kafka;
 using Newtonsoft.Json;
 using NuClear.Messaging.API.Flows;
 using NuClear.Messaging.Transports.Kafka;
@@ -33,6 +35,8 @@ namespace NuClear.ValidationRules.Hosting.Common.Settings.Kafka
             {
                 topics.Add(ConfigFileSetting.String.Required("AmsFactsTopic").Value);
                 topics.Add(ConfigFileSetting.String.Required("RulesetFactsTopic").Value);
+                topics.Add(ConfigFileSetting.String.Required("InfoRussiaFactsTopic").Value);
+                topics.Add(ConfigFileSetting.String.Required("FijiFactsTopic").Value);
             }
             else if (messageFlow.Equals(AmsFactsFlow.Instance))
             {
@@ -41,6 +45,14 @@ namespace NuClear.ValidationRules.Hosting.Common.Settings.Kafka
             else if (messageFlow.Equals(RulesetFactsFlow.Instance))
             {
                 topics.Add(ConfigFileSetting.String.Required("RulesetFactsTopic").Value);
+            }
+            else if (messageFlow.Equals(InfoRussiaFactsFlow.Instance))
+            {
+                topics.Add(ConfigFileSetting.String.Required("InfoRussiaFactsTopic").Value);
+            }
+            else if (messageFlow.Equals(FijiFactsFlow.Instance))
+            {
+                topics.Add(ConfigFileSetting.String.Required("FijiFactsTopic").Value);
             }
 
             if (topics.Count == 0)
@@ -51,7 +63,7 @@ namespace NuClear.ValidationRules.Hosting.Common.Settings.Kafka
             return new KafkaMessageFlowReceiverSettings
             {
                 Config = _kafkaConfig,
-                Topics = topics
+                TopicPartitionOffsets = topics.Select(x => new TopicPartitionOffset(x, Partition.Any, Offset.Unset))
             };
         }
     }

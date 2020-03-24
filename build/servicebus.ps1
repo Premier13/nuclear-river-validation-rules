@@ -11,7 +11,7 @@ Import-Module "$BuildToolsRoot\modules\transform.psm1" -DisableNameChecking
 Task Deploy-ServiceBus -Precondition { $Metadata['UpdateSchemas'] } {
 	if ($Metadata['ValidationRules.Replication.Host']){
 		# fixme: обращение к $Properties.Tenants выглядит не совсем уместным, возможно етсь более корректное решение.
-		foreach ($tenant in $Properties.Tenants.Split(',')){
+		foreach ($tenant in $Properties.Tenants.Split(',', [System.StringSplitOptions]::RemoveEmptyEntries)){
 			Deploy-ServiceBus 'ValidationRules.Replication.Host' $tenant
 		}
 	}

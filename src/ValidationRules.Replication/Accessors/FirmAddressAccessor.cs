@@ -1,41 +1,52 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using NuClear.Replication.Core;
 using NuClear.Replication.Core.DataObjects;
-using NuClear.Replication.Core.Specs;
 using NuClear.Storage.API.Readings;
 using NuClear.Storage.API.Specifications;
 using NuClear.ValidationRules.Replication.Commands;
+using NuClear.ValidationRules.Replication.Dto;
 using NuClear.ValidationRules.Replication.Events;
 using NuClear.ValidationRules.Replication.Specifications;
 using NuClear.ValidationRules.Storage.Model.Facts;
 
 namespace NuClear.ValidationRules.Replication.Accessors
 {
-    public sealed class FirmAddressAccessor : IStorageBasedDataObjectAccessor<FirmAddress>, IDataChangesHandler<FirmAddress>
+    public sealed class FirmAddressAccessor: IMemoryBasedDataObjectAccessor<FirmAddress>, IDataChangesHandler<FirmAddress>
     {
         private readonly IQuery _query;
 
         public FirmAddressAccessor(IQuery query) => _query = query;
 
-        public IQueryable<FirmAddress> GetSource() =>
-            _query.For(Specs.Find.Erm.FirmAddress.Active)
-            .Select(x => new FirmAddress
-            {
-                Id = x.Id,
-                FirmId = x.FirmId,
-
-                IsLocatedOnTheMap = x.IsLocatedOnTheMap,
-                EntranceCode = x.EntranceCode,
-                BuildingPurposeCode = x.BuildingPurposeCode
-            });
-
-        public FindSpecification<FirmAddress> GetFindSpecification(IReadOnlyCollection<ICommand> commands)
+        public IReadOnlyCollection<FirmAddress> GetDataObjects(IEnumerable<ICommand> commands)
         {
-            var ids = commands.Cast<SyncDataObjectCommand>().SelectMany(c => c.DataObjectIds).ToHashSet();
-            return SpecificationFactory<FirmAddress>.Contains(x => x.Id, ids);
+            var dtos = commands
+                .Cast<SyncInMemoryDataObjectCommand>()
+                .SelectMany(x => x.Dtos)
+                .OfType<FirmAddressDto>()
+                .GroupBy(x => x.Id)
+                .Select(x => x.Last());
+
+            var result = dtos
+                .Where(Specs.Find.InfoRussia.FirmAddress.Active)
+                .Select(x => new FirmAddress
+                {
+                    Id = x.Id,
+                    FirmId = x.FirmId,
+                    IsLocatedOnTheMap = x.IsLocatedOnTheMap,
+                    EntranceCode = x.EntranceCode,
+                    BuildingId = x.BuildingId
+                }).ToList();
+
+            return result;
+        }
+
+        public FindSpecification<FirmAddress> GetFindSpecification(IEnumerable<ICommand> commands)
+        {
+            var ids = commands.Cast<SyncInMemoryDataObjectCommand>().SelectMany(x => x.Dtos).OfType<FirmAddressDto>()
+                .Select(x => x.Id).ToHashSet();
+            return new FindSpecification<FirmAddress>(x => ids.Contains(x.Id));
         }
 
         public IReadOnlyCollection<IEvent> HandleCreates(IReadOnlyCollection<FirmAddress> dataObjects)
@@ -53,16 +64,16 @@ namespace NuClear.ValidationRules.Replication.Accessors
             
             var orderIdsByFirm =
                 _query.For<Order>()
-                .Where(x => firmIds.Contains(x.FirmId))
-                .Select(x => x.Id)
-                .Distinct();
+                    .Where(x => firmIds.Contains(x.FirmId))
+                    .Select(x => x.Id)
+                    .Distinct();
 
             var firmAddressIds = dataObjects.Select(x => x.Id).ToHashSet();
             var orderIdsByUsage =
                 _query.For<OrderPositionAdvertisement>()
-                .Where(x => firmAddressIds.Contains(x.FirmAddressId.Value))
-                .Select(x => x.OrderId)
-                .Distinct();
+                    .Where(x => firmAddressIds.Contains(x.FirmAddressId.Value))
+                    .Select(x => x.OrderId)
+                    .Distinct();
             
             var orderIds = orderIdsByFirm.Concat(orderIdsByUsage).ToHashSet();
             

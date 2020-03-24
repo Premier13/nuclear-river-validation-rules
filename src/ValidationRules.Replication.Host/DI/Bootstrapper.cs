@@ -96,9 +96,12 @@ using NuClear.ValidationRules.OperationsProcessing.Facts.Kafka.Ruleset;
 using NuClear.ValidationRules.Storage.Model.Facts;
 using NuClear.ValidationRules.Replication.Accessors;
 using NuClear.ValidationRules.Replication.Accessors.Rulesets;
-using NuClear.ValidationRules.Replication.Host.Customs;
 using NuClear.ValidationRules.Replication.Host.Jobs;
 using NuClear.ValidationRules.Storage.FieldComparer;
+
+#if !DEBUG
+using NuClear.ValidationRules.Replication.Host.Customs;    
+#endif
 
 using Quartz.Spi;
 using Schema = NuClear.ValidationRules.Storage.Schema;
@@ -307,11 +310,6 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                    .RegisterAccessor<CategoryOrganizationUnit, CategoryOrganizationUnitAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterAccessor<CostPerClickCategoryRestriction, CostPerClickCategoryRestrictionAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterAccessor<Deal, DealAccessor>(entryPointSpecificLifetimeManagerFactory)
-                   .RegisterAccessor<Firm, FirmAccessor>(entryPointSpecificLifetimeManagerFactory)
-                   .RegisterAccessor<FirmInactive, FirmInactiveAccessor>(entryPointSpecificLifetimeManagerFactory)
-                   .RegisterAccessor<FirmAddress, FirmAddressAccessor>(entryPointSpecificLifetimeManagerFactory)
-                   .RegisterAccessor<FirmAddressInactive, FirmAddressInactiveAccessor>(entryPointSpecificLifetimeManagerFactory)
-                   .RegisterAccessor<FirmAddressCategory, FirmAddressCategoryAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterAccessor<LegalPerson, LegalPersonAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterAccessor<LegalPersonProfile, LegalPersonProfileAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterAccessor<NomenclatureCategory, NomenclatureCategoryAccessor>(entryPointSpecificLifetimeManagerFactory)
@@ -336,15 +334,19 @@ namespace NuClear.ValidationRules.Replication.Host.DI
                    .RegisterAccessor<ThemeOrganizationUnit, ThemeOrganizationUnitAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterAccessor<UnlimitedOrder, UnlimitedOrderAccessor>(entryPointSpecificLifetimeManagerFactory)
 
-                   // TODO: все эти сущности обладают Id, поэтому вместо тупого delete all\insert all
-                   // тут можно использовать интеллектуальный SyncDataObjectsActor, но проблема в том что нужен рефакторинг
-                   // т.к. SyncDataObjectsActor не может работать с объектами, прилетевшими чисто по шине
                    .RegisterMemoryAccessor<Advertisement, AdvertisementAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterMemoryAccessor<Ruleset, RulesetAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterMemoryAccessor<Ruleset.AssociatedRule, RulesetAssociatedRuleAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterMemoryAccessor<Ruleset.DeniedRule, RulesetDeniedRuleAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterMemoryAccessor<Ruleset.QuantitativeRule, RulesetQuantitativeRuleAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterMemoryAccessor<Ruleset.RulesetProject, RulesetProjectAccessor>(entryPointSpecificLifetimeManagerFactory)
+                   .RegisterMemoryAccessor<Firm, FirmAccessor>(entryPointSpecificLifetimeManagerFactory)
+                   .RegisterMemoryAccessor<FirmInactive, FirmInactiveAccessor>(entryPointSpecificLifetimeManagerFactory)
+                   .RegisterMemoryAccessor<FirmAddress, FirmAddressAccessor>(entryPointSpecificLifetimeManagerFactory)
+                   .RegisterMemoryAccessor<FirmAddressInactive, FirmAddressInactiveAccessor>(entryPointSpecificLifetimeManagerFactory)
+                   .RegisterMemoryAccessor<FirmAddressCategory, FirmAddressCategoryAccessor>(entryPointSpecificLifetimeManagerFactory)
+                   .RegisterMemoryAccessor<Building, BuildingAccessor>(entryPointSpecificLifetimeManagerFactory)
+                   .RegisterMemoryAccessor<BuildingBulkDelete, BuildingBulkDeleteAccessor>(entryPointSpecificLifetimeManagerFactory)
                    .RegisterMemoryAccessor<Version.ErmState, Messages.ErmStateAccessor>(entryPointSpecificLifetimeManagerFactory)
 
                    .RegisterType<IDataObjectsActorFactory, UnityDataObjectsActorFactory>(entryPointSpecificLifetimeManagerFactory())

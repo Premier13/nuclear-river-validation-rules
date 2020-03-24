@@ -22,7 +22,7 @@ namespace NuClear.ValidationRules.Replication.Accessors.Rulesets
         public IReadOnlyCollection<Ruleset.RulesetProject> GetDataObjects(IEnumerable<ICommand> commands)
         {
             var dtos = commands
-                .Cast<ReplaceDataObjectCommand>()
+                .Cast<SyncInMemoryDataObjectCommand>()
                 .SelectMany(x => x.Dtos)
                 .Cast<RulesetDto>()
                 .GroupBy(x => x.Id)
@@ -39,7 +39,7 @@ namespace NuClear.ValidationRules.Replication.Accessors.Rulesets
 
         public FindSpecification<Ruleset.RulesetProject> GetFindSpecification(IEnumerable<ICommand> commands)
         {
-            var ids = commands.Cast<ReplaceDataObjectCommand>().SelectMany(x => x.Dtos).Cast<RulesetDto>().Select(x => x.Id).ToHashSet();
+            var ids = commands.Cast<SyncInMemoryDataObjectCommand>().SelectMany(x => x.Dtos).Cast<RulesetDto>().Select(x => x.Id).ToHashSet();
 
             return new FindSpecification<Ruleset.RulesetProject>(x => ids.Contains(x.RulesetId));
         }

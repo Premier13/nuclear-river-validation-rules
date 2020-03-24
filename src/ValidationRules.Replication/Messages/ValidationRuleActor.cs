@@ -30,7 +30,7 @@ namespace NuClear.ValidationRules.Replication.Messages
     {
         private readonly IQuery _query;
         private readonly IRepository<Version> _versionRepository;
-        private readonly ReplaceDataObjectsActor<Version.ErmState> _replaceErmStates;
+        private readonly SyncInMemoryDataObjectsActor<Version.ErmState> _syncInMemoryErmStates;
         private readonly IRepository<Version.AmsState> _amsStatesRepository;
         private readonly IBulkRepository<Version.ValidationResult> _validationResultRepository;
         private readonly Dictionary<MessageTypeCode, IValidationResultAccessor> _accessors;
@@ -39,7 +39,7 @@ namespace NuClear.ValidationRules.Replication.Messages
 
         public ValidationRuleActor(IQuery query,
                                    IRepository<Version> versionRepository,
-                                   ReplaceDataObjectsActor<Version.ErmState> replaceErmStates,
+                                   SyncInMemoryDataObjectsActor<Version.ErmState> syncInMemoryErmStates,
                                    IRepository<Version.AmsState> amsStatesRepository,
                                    IBulkRepository<Version.ValidationResult> validationResultRepository,
                                    IEqualityComparerFactory equalityComparerFactory,
@@ -47,7 +47,7 @@ namespace NuClear.ValidationRules.Replication.Messages
         {
             _query = query;
             _versionRepository = versionRepository;
-            _replaceErmStates = replaceErmStates;
+            _syncInMemoryErmStates = syncInMemoryErmStates;
             _validationResultRepository = validationResultRepository;
             _amsStatesRepository = amsStatesRepository;
             _accessors = new ValidationRuleRegistry(query).CreateAccessors().ToDictionary(x => (MessageTypeCode)x.MessageTypeId, x => x);
@@ -213,7 +213,7 @@ namespace NuClear.ValidationRules.Replication.Messages
             if (ermStates.Count != 0)
             {
                 var versionErmStates = ermStates.Select(x => new Version.ErmState {VersionId = id, Token = x.Token, UtcDateTime = x.UtcDateTime});
-                _replaceErmStates.ExecuteCommands(new[] {new ReplaceDataObjectCommand(typeof(Version.ErmState), versionErmStates)});
+                _syncInMemoryErmStates.ExecuteCommands(new[] {new SyncInMemoryDataObjectCommand(typeof(Version.ErmState), versionErmStates)});
             }
 
             if (amsStates.Count != 0)
@@ -232,7 +232,7 @@ namespace NuClear.ValidationRules.Replication.Messages
             if (ermStates.Count != 0)
             {
                 var versionErmStates = ermStates.Select(x => new Version.ErmState {VersionId = id, Token = x.Token, UtcDateTime = x.UtcDateTime});
-                _replaceErmStates.ExecuteCommands(new[] {new ReplaceDataObjectCommand(typeof(Version.ErmState), versionErmStates)});
+                _syncInMemoryErmStates.ExecuteCommands(new[] {new SyncInMemoryDataObjectCommand(typeof(Version.ErmState), versionErmStates)});
             }
 
             if (amsStates.Count != 0)

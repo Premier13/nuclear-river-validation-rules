@@ -15,8 +15,7 @@ namespace NuClear.Messaging.Transports.Kafka
     public sealed class KafkaMessageFlowReceiverSettings : ISettings
     {
         public IReadOnlyDictionary<string, string> Config { get; set; }
-        public IEnumerable<string> Topics { get; set; }
-        public Offset Offset { get; set; } = Offset.Unset;
+        public IEnumerable<TopicPartitionOffset> TopicPartitionOffsets { get; set; }
         public TimeSpan PollTimeout { get; set; } = TimeSpan.FromSeconds(5);
     }
 

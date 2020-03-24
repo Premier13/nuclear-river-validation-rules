@@ -3,36 +3,49 @@ using System.Collections.Generic;
 using System.Linq;
 using NuClear.Replication.Core;
 using NuClear.Replication.Core.DataObjects;
-using NuClear.Replication.Core.Specs;
 using NuClear.Storage.API.Readings;
 using NuClear.Storage.API.Specifications;
 using NuClear.ValidationRules.Replication.Commands;
+using NuClear.ValidationRules.Replication.Dto;
 using NuClear.ValidationRules.Replication.Events;
 using NuClear.ValidationRules.Replication.Specifications;
 using NuClear.ValidationRules.Storage.Model.Facts;
 
 namespace NuClear.ValidationRules.Replication.Accessors
 {
-    public sealed class FirmInactiveAccessor : IStorageBasedDataObjectAccessor<FirmInactive>, IDataChangesHandler<FirmInactive>
+    public sealed class FirmInactiveAccessor : IMemoryBasedDataObjectAccessor<FirmInactive>, IDataChangesHandler<FirmInactive>
     {
         private readonly IQuery _query;
 
         public FirmInactiveAccessor(IQuery query) => _query = query;
 
-        public IQueryable<FirmInactive> GetSource() => _query
-            .For(Specs.Find.Erm.Firm.Inactive)
-            .Select(x => new FirmInactive
-            {
-                Id = x.Id,
-                IsActive = x.IsActive,
-                IsDeleted = x.IsDeleted,
-                IsClosedForAscertainment = x.ClosedForAscertainment
-            });
-
-        public FindSpecification<FirmInactive> GetFindSpecification(IReadOnlyCollection<ICommand> commands)
+        public IReadOnlyCollection<FirmInactive> GetDataObjects(IEnumerable<ICommand> commands)
         {
-            var ids = commands.Cast<SyncDataObjectCommand>().SelectMany(c => c.DataObjectIds).ToHashSet();
-            return SpecificationFactory<FirmInactive>.Contains(x => x.Id, ids);
+            var dtos = commands
+                .Cast<SyncInMemoryDataObjectCommand>()
+                .SelectMany(x => x.Dtos)
+                .OfType<FirmDto>()
+                .GroupBy(x => x.Id)
+                .Select(x => x.Last());
+
+            var result = dtos
+                .Where(Specs.Find.InfoRussia.Firm.Inactive)
+                .Select(x => new FirmInactive
+                {
+                    Id = x.Id,
+                    IsActive = x.IsActive,
+                    IsDeleted = x.IsDeleted,
+                    IsClosedForAscertainment = x.ClosedForAscertainment
+                }).ToList();
+
+            return result;
+        }
+
+        public FindSpecification<FirmInactive> GetFindSpecification(IEnumerable<ICommand> commands)
+        {
+            var ids = commands.Cast<SyncInMemoryDataObjectCommand>().SelectMany(x => x.Dtos).OfType<FirmDto>()
+                .Select(x => x.Id).ToHashSet();
+            return new FindSpecification<FirmInactive>(x => ids.Contains(x.Id));
         }
 
         public IReadOnlyCollection<IEvent> HandleCreates(IReadOnlyCollection<FirmInactive> dataObjects)
