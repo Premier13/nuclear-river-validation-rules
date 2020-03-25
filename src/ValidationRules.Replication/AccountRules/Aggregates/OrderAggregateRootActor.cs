@@ -48,14 +48,26 @@ namespace NuClear.ValidationRules.Replication.AccountRules.Aggregates
                    from orderConsistency in _query.For<Facts::OrderConsistency>().Where(x => x.Id == order.Id)
                    from orderWorkflow in _query.For<Facts::OrderWorkflow>().Where(x => Facts::OrderWorkflowStep.Payable.Contains(x.Step)).Where(x => x.Id == order.Id)
                    from account in _query.For<Facts::Account>().Where(x => x.LegalPersonId == orderConsistency.LegalPersonId && x.BranchOfficeOrganizationUnitId == orderConsistency.BranchOfficeOrganizationUnitId).DefaultIfEmpty()
-                   select new Order
-                       {
-                           Id = order.Id,
-                           AccountId = account.Id,
-                           IsFreeOfCharge = orderConsistency.IsFreeOfCharge,
-                           Start = order.AgileDistributionStartDate,
-                           End = order.AgileDistributionEndFactDate,
-                       };
+
+                // Временный костыль чтобы отфильтровать все существующие на данный момент rocket-data заказы
+                // вместо этого костыля надо добавить полноценную поддержку rocket-data заказов в VR до 1 мая 2020
+                where !new []
+                {
+                    1084293870000744195,
+                    1084293940591230979,
+                    1084299836504324608,
+                    1084299910999449091,
+                    1084299911000187651,
+                    1084299911002363907,
+                }.Contains(order.Id)
+                select new Order
+                {
+                    Id = order.Id,
+                    AccountId = account.Id,
+                    IsFreeOfCharge = orderConsistency.IsFreeOfCharge,
+                    Start = order.AgileDistributionStartDate,
+                    End = order.AgileDistributionEndFactDate,
+                };
 
             public FindSpecification<Order> GetFindSpecification(IReadOnlyCollection<ICommand> commands)
             {
