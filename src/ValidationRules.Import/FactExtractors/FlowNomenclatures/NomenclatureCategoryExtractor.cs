@@ -14,10 +14,10 @@ namespace NuClear.ValidationRules.Import.FactExtractors.FlowNomenclatures
                 Name = nomenclatureCategory.Name,
             };
 
+            // Храним всё. В том числе удалённые.
             yield return new Model.PersistentFacts.NomenclatureCategory
             {
                 Id = nomenclatureCategory.Code,
-                IsDeleted = nomenclatureCategory.IsDeleted,
             };
         }
     }

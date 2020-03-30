@@ -77,8 +77,7 @@ namespace NuClear.ValidationRules.Migrator.Migrations
 
             Create.Table("NomenclatureCategory")
                 .InSchema("PersistentFacts")
-                .WithColumn("Id").AsInt64().PrimaryKey()
-                .WithColumn("IsDeleted").AsBoolean();
+                .WithColumn("Id").AsInt64().PrimaryKey();
 
             Create.Table("Position")
                 .InSchema("PersistentFacts")

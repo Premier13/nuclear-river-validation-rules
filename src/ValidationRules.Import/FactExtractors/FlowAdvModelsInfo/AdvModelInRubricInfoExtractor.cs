@@ -21,8 +21,17 @@ namespace NuClear.ValidationRules.Import.FactExtractors.FlowAdvModelsInfo
                         ProjectId = advModelInRubricInfo.BranchCode,
                         Start = advModelInRubricInfo.BeginningDate,
                         CategoryId = rubric.Code,
-                        SalesModel = (int) rubric.AdvModel,
+                        SalesModel = ConvertAdvModel(rubric.AdvModel),
                     }).ToList());
         }
+
+        private int ConvertAdvModel(AdvModel rubricAdvModel)
+            => rubricAdvModel switch
+            {
+                AdvModel.FH => 11,
+                AdvModel.CPS => 10,
+                AdvModel.MFH => 12,
+                AdvModel.MAR => 999,
+            };
     }
 }
