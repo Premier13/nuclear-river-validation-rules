@@ -22,8 +22,7 @@ namespace NuClear.ValidationRules.Replication.AccountRules.Validation
         protected override IQueryable<Version.ValidationResult> GetValidationResults(IQuery query)
         {
             var ruleResults =
-                from order in query.For<Order>()
-                where order.AccountId == null
+                from order in query.For<Order>().Where(x => x.AccountId == null)
                 select new Version.ValidationResult
                     {
                         MessageParams =

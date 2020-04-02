@@ -323,10 +323,10 @@ namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
             => ArrangeMetadataElement.Config
                 .Name(nameof(AccountFacts))
                 .Erm(
-                    new Erm::Account { Id = 1, IsArchived = false, Balance = 2, BranchOfficeOrganizationUnitId = 3, LegalPersonId = 4 },
+                    new Erm::Account { Id = 1, IsArchived = false, Balance = 2 },
                     new Erm::Account { Id = 2, IsArchived = true })
                 .Fact(
-                    new Account { Id = 1, Balance = 2, BranchOfficeOrganizationUnitId = 3, LegalPersonId = 4 });
+                    new Account { Id = 1, Balance = 2 });
 
         // ReSharper disable once UnusedMember.Local
         private static ArrangeMetadataElement AccountDetailFacts

@@ -72,10 +72,10 @@ namespace NuClear.ValidationRules.Replication.AccountRules.Aggregates
             {
                 var releaseWithdrawalPeriods =
                     from order in _query.For<Facts::Order>()
-                    from orderConsistency in _query.For<Facts::OrderConsistency>().Where(x => !x.IsFreeOfCharge).Where(x => x.Id == order.Id)
                     from orderWorkflow in _query.For<Facts::OrderWorkflow>().Where(x => Facts::OrderWorkflowStep.Payable.Contains(x.Step)).Where(x => x.Id == order.Id)
-                    from account in _query.For<Facts::Account>()
-                                          .Where(x => x.LegalPersonId == orderConsistency.LegalPersonId && x.BranchOfficeOrganizationUnitId == orderConsistency.BranchOfficeOrganizationUnitId)
+                    from orderConsistency in _query.For<Facts::OrderConsistency>().Where(x => !x.IsFreeOfCharge).Where(x => x.Id == order.Id)
+                    from bargain in _query.For<Facts::Bargain>().Where(x => x.Id == orderConsistency.BargainId)
+                    from account in _query.For<Facts::Account>().Where(x => x.Id == bargain.AccountId)
                     from orderPosition in _query.For<Facts::OrderPosition>().Where(x => x.OrderId == order.Id)
                     from releaseWithdrawal in _query.For<Facts::ReleaseWithdrawal>()
                                                     .Where(x => x.OrderPositionId == orderPosition.Id)

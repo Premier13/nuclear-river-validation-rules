@@ -24,8 +24,6 @@ namespace NuClear.ValidationRules.Replication.Accessors
                 {
                     Id = x.Id,
                     Balance = x.Balance,
-                    BranchOfficeOrganizationUnitId = x.BranchOfficeOrganizationUnitId,
-                    LegalPersonId = x.LegalPersonId
                 });
 
         public FindSpecification<Account> GetFindSpecification(IReadOnlyCollection<ICommand> commands)
@@ -48,13 +46,13 @@ namespace NuClear.ValidationRules.Replication.Accessors
             var accountIds = dataObjects.Select(x => x.Id).ToHashSet();
 
             var orderIds =
-                from account in _query.For<Account>().Where(x => accountIds.Contains(x.Id))
-                from order in _query.For<OrderConsistency>().Where(x =>
-                    x.LegalPersonId == account.LegalPersonId &&
-                    x.BranchOfficeOrganizationUnitId == account.BranchOfficeOrganizationUnitId)
-                select order.Id;
+                (from bargain in _query.For<Bargain>().Where(x => accountIds.Contains(x.AccountId.Value))
+                from order in _query.For<OrderConsistency>().Where(x => x.BargainId == bargain.Id)
+                select order.Id)
+                .Distinct()
+                .ToList();
 
-            return new[] {new RelatedDataObjectOutdatedEvent(typeof(Account), typeof(Order), orderIds.ToHashSet())};
+            return new[] {new RelatedDataObjectOutdatedEvent(typeof(Account), typeof(Order), orderIds)};
         }
     }
 }

@@ -23,15 +23,17 @@ namespace NuClear.ValidationRules.OperationsProcessing
                 .Aggregate<AccountAggregates::Account>(
                     x => x.Match<Facts::Account>()
                           .DependOn<Facts::Order>()
-                          .DependOn<Facts::OrderConsistency>()
                           .DependOn<Facts::OrderWorkflow>()
+                          .DependOn<Facts::OrderConsistency>()
+                          .DependOn<Facts::Bargain>()
                           .DependOn<Facts::AccountDetail>()
                           .DependOn<Facts::OrderPosition>()
                           .DependOn<Facts::ReleaseWithdrawal>())
                 .Aggregate<AccountAggregates::Order>(
                     x => x.Match<Facts::Order>()
-                          .DependOn<Facts::OrderConsistency>()
                           .DependOn<Facts::OrderWorkflow>()
+                          .DependOn<Facts::OrderConsistency>()
+                          .DependOn<Facts::Bargain>()
                           .DependOn<Facts::UnlimitedOrder>()
                           .DependOn<Facts::Account>())
 

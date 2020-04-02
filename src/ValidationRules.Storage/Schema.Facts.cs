@@ -20,8 +20,7 @@ namespace NuClear.ValidationRules.Storage
         {
             builder.Entity<Account>()
                     .HasSchemaName(FactsSchema)
-                    .HasPrimaryKey(x => x.Id)
-                    .HasIndex(x => new {x.BranchOfficeOrganizationUnitId, x.LegalPersonId});
+                    .HasPrimaryKey(x => x.Id);
 
             builder.Entity<AccountDetail>()
                    .HasSchemaName(FactsSchema)
@@ -35,7 +34,8 @@ namespace NuClear.ValidationRules.Storage
 
             builder.Entity<Bargain>()
                    .HasSchemaName(FactsSchema)
-                   .HasPrimaryKey(x => x.Id);
+                   .HasPrimaryKey(x => x.Id)
+                   .HasIndex(x => x.AccountId);
 
             builder.Entity<BargainScanFile>()
                    .HasSchemaName(FactsSchema)

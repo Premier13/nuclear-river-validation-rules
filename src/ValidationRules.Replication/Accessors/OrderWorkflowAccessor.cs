@@ -44,8 +44,10 @@ namespace NuClear.ValidationRules.Replication.Accessors
             
             var accountIds =
                 (from order in _query.For<OrderConsistency>().Where(x => orderIds.Contains(x.Id))
-                 from account in _query.For<Account>().Where(x => x.LegalPersonId == order.LegalPersonId && x.BranchOfficeOrganizationUnitId == order.BranchOfficeOrganizationUnitId)
-                 select account.Id)
+                from bargain in _query.For<Bargain>()
+                    .Where(x => x.AccountId != null)
+                    .Where(x => x.Id == order.BargainId)
+                select bargain.AccountId.Value)
                 .Distinct()
                 .ToList();
             

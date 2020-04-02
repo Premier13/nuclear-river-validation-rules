@@ -44,66 +44,11 @@ namespace NuClear.ValidationRules.Replication.AccountRules.Aggregates
                 => dataObjects.Select(x => x.Id);
             
             public IQueryable<Order> GetSource()
-                => from order in _query.For<Facts::Order>()
-                   from orderConsistency in _query.For<Facts::OrderConsistency>().Where(x => x.Id == order.Id)
+                => from order in _query.For<Facts::Order>() 
                    from orderWorkflow in _query.For<Facts::OrderWorkflow>().Where(x => Facts::OrderWorkflowStep.Payable.Contains(x.Step)).Where(x => x.Id == order.Id)
-                   from account in _query.For<Facts::Account>().Where(x => x.LegalPersonId == orderConsistency.LegalPersonId && x.BranchOfficeOrganizationUnitId == orderConsistency.BranchOfficeOrganizationUnitId).DefaultIfEmpty()
-
-                // Временный костыль чтобы отфильтровать все существующие на данный момент rocket-data заказы
-                // вместо этого костыля надо добавить полноценную поддержку rocket-data заказов в VR до 1 мая 2020
-                where !new []
-                {
-                    993400733305078534,
-                    1031470311579903799,
-                    1033782690185908706,
-                    1044879683426403160,
-                    1018783740271017030,
-                    1041091400101723182,
-                    1058054002503229184,
-                    1058054002504018432,
-                    1058331848943288064,
-                    1058331848943438080,
-                    1058331848943562496,
-                    1058331848943663360,
-                    1057979590297731841,
-                    1057979590298035713,
-                    1058076891813980160,
-                    1055961806661359560,
-                    1058051681664120833,
-                    1057979590297764097,
-                    1046319024075619240,
-                    1049783413232780497,
-                    1070667548599291392,
-                    1070667548599299584,
-                    1070667548599437056,
-                    1070664481280987651,
-                    1070664481281003011,
-                    1073767193633763331,
-                    1070667548599442688,
-                    1072043765006759171,
-                    1083488388720991232,
-                    1084293870000744195,
-                    1084356057770044672,
-                    1084356057769934592,
-                    1084357106261797376,
-                    1084356057769513984,
-                    1084284440686018048,
-                    1084284517072275971,
-                    1084299911002363907,
-                    1084293940591230979,
-                    1084299910999449091,
-                    1084299910999469827,
-                    1084299911005953027,
-                    1083696271635024640,
-                    1083696271637489408,
-                    1073767267428367360,
-                    1084299836504324608,
-                    1084299836504397568,
-                    1084371799941961472,
-                    1084421684335456768,
-                    1084299911000187651,
-                    1084299911000218627
-                }.Contains(order.Id)
+                   from orderConsistency in _query.For<Facts::OrderConsistency>().Where(x => x.Id == order.Id)
+                   from bargain in _query.For<Facts::Bargain>().Where(x => x.Id == orderConsistency.BargainId).DefaultIfEmpty()
+                   from account in _query.For<Facts::Account>().Where(x => x.Id == bargain.AccountId).DefaultIfEmpty()
                 select new Order
                 {
                     Id = order.Id,

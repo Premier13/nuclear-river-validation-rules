@@ -16,11 +16,19 @@ namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
                 .Config
                 .Name(nameof(AccountShouldExistNegative))
                 .Fact(
+                    // лиц. счёт не привязан к договору
                     new Facts::Order { Id = 1, AgileDistributionStartDate = FirstDayJan, AgileDistributionEndFactDate = FirstDayMar },
-                    new Facts::OrderConsistency { Id = 1, LegalPersonId = 2, BranchOfficeOrganizationUnitId = 3 },
-                    new Facts::OrderWorkflow { Id = 1, Step = 4 })
+                    new Facts::OrderWorkflow { Id = 1, Step = 4 },
+                    new Facts::OrderConsistency { Id = 1, BargainId = 1 },
+                    new Facts::Bargain { Id = 1, AccountId = null},
+
+                    // договор не привязан к заказу
+                    new Facts::Order { Id = 2, AgileDistributionStartDate = FirstDayJan, AgileDistributionEndFactDate = FirstDayMar },
+                    new Facts::OrderWorkflow { Id = 2, Step = 4 },
+                    new Facts::OrderConsistency { Id = 2, BargainId = null })
                 .Aggregate(
-                    new Order { Id = 1, AccountId = null, Start = FirstDayJan, End = FirstDayMar })
+                    new Order { Id = 1, AccountId = null, Start = FirstDayJan, End = FirstDayMar },
+                    new Order { Id = 2, AccountId = null, Start = FirstDayJan, End = FirstDayMar })
                 .Message(
                     new Messages::Version.ValidationResult
                         {
@@ -29,7 +37,15 @@ namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
                             PeriodStart = FirstDayJan,
                             PeriodEnd = FirstDayMar,
                             OrderId = 1,
-                        });
+                        },
+                    new Messages::Version.ValidationResult
+                    {
+                        MessageParams = new MessageParams(new Reference<EntityTypeOrder>(2)).ToXDocument(),
+                        MessageType = (int)MessageTypeCode.AccountShouldExist,
+                        PeriodStart = FirstDayJan,
+                        PeriodEnd = FirstDayMar,
+                        OrderId = 2,
+                    });
 
         // ReSharper disable once UnusedMember.Local
         private static ArrangeMetadataElement AccountShouldExistPositive
@@ -38,11 +54,12 @@ namespace NuClear.ValidationRules.Replication.StateInitialization.Tests
                 .Name(nameof(AccountShouldExistPositive))
                 .Fact(
                     new Facts::Order { Id = 1, AgileDistributionStartDate = FirstDayJan, AgileDistributionEndFactDate = FirstDayMar },
-                    new Facts::OrderConsistency { Id = 1, LegalPersonId = 2, BranchOfficeOrganizationUnitId = 3 },
                     new Facts::OrderWorkflow { Id = 1, Step = 4 },
-                    new Facts::Account { Id = 4, LegalPersonId = 2, BranchOfficeOrganizationUnitId = 3 })
+                    new Facts::OrderConsistency { Id = 1, BargainId = 2 },
+                    new Facts::Bargain { Id = 2, AccountId = 3},
+                    new Facts::Account { Id = 3 })
                 .Aggregate(
-                    new Order { Id = 1, AccountId = 4, Start = FirstDayJan, End = FirstDayMar })
+                    new Order { Id = 1, AccountId = 3, Start = FirstDayJan, End = FirstDayMar })
                 .Message();
     }
 }

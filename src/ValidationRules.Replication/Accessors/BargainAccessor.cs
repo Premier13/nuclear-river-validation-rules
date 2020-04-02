@@ -28,6 +28,7 @@ namespace NuClear.ValidationRules.Replication.Accessors
                 {
                     Id = x.Id,
                     SignupDate = x.SignedOn,
+                    AccountId = x.AccountId
                 });
 
         public FindSpecification<Bargain> GetFindSpecification(IReadOnlyCollection<ICommand> commands)
@@ -50,12 +51,25 @@ namespace NuClear.ValidationRules.Replication.Accessors
             var bargainIds = dataObjects.Select(x => x.Id).ToHashSet();
 
             var orderIds = _query.For<OrderConsistency>()
-                .Where(x => x.BargainId.HasValue && bargainIds.Contains(x.BargainId.Value))
+                .Where(x => bargainIds.Contains(x.BargainId.Value))
                 .Select(x => x.Id)
                 .Distinct()
                 .ToList();
+            
+            var accountIds =
+                (from order in _query.For<OrderConsistency>().Where(x => orderIds.Contains(x.Id))
+                    from bargain in _query.For<Bargain>()
+                        .Where(x => x.AccountId != null)
+                        .Where(x => x.Id == order.BargainId)
+                    select bargain.AccountId.Value)
+                .Distinct()
+                .ToList();
 
-            return new[] {new RelatedDataObjectOutdatedEvent(typeof(Bargain), typeof(Order), orderIds)};
+            return new[]
+            {
+                new RelatedDataObjectOutdatedEvent(typeof(Bargain), typeof(Order), orderIds),
+                new RelatedDataObjectOutdatedEvent(typeof(Bargain), typeof(Account), accountIds)
+            };
         }
     }
 }
