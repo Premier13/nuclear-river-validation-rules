@@ -53,7 +53,7 @@ namespace NuClear.ValidationRules.Migrator.Migrations
                 .WithColumn("ProjectId").AsInt64().PrimaryKey()
                 .WithColumn("Start").AsDateTime2().PrimaryKey()
                 .WithColumn("CategoryId").AsInt64().PrimaryKey()
-                .WithColumn("MinCostPerClick").AsDecimal();
+                .WithColumn("MinCostPerClick").AsDecimal(19, 4);
 
             Create.Table("EntityName")
                 .InSchema("PersistentFacts")
