@@ -1,5 +1,5 @@
-insert into [PersistentFacts].[Account]([Id], [BranchOfficeOrganizationUnitId], [LegalPersonId], [Balance])
-select [Id], [BranchOfficeOrganizationUnitId], [LegalPersonId], [Balance]
+insert into [PersistentFacts].[Account]([Id], [Balance])
+select [Id], [Balance]
 from [Facts].[Account]
 
 insert into [PersistentFacts].[AccountDetail]([Id], [IsDeleted], [AccountId], [OrderId], [PeriodStartDate])
@@ -35,8 +35,8 @@ insert into [PersistentFacts].[LegalPersonProfile]([Id], [IsDeleted], [LegalPers
 select [Id], 0, [LegalPersonId], [BargainEndDate], [WarrantyEndDate]
 from [Facts].[LegalPersonProfile]
 
-insert into [PersistentFacts].[NomenclatureCategory]([Id], [IsDeleted])
-select [Id], 0
+insert into [PersistentFacts].[NomenclatureCategory]([Id])
+select [Id]
 from [Facts].[NomenclatureCategory]
 
 insert into [PersistentFacts].[Position]([Id], [BindingObjectType], [SalesModel], [PositionsGroup], [IsCompositionOptional], [ContentSales], [IsControlledByAmount], [CategoryCode], [IsDeleted])

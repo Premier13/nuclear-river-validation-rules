@@ -6,5 +6,6 @@ namespace NuClear.ValidationRules.Import.Model.Facts
         public long Id { get; set; }
         public long? LegalPersonId { get; set; }
         public long? BranchOfficeOrganizationUnitId { get; set; }
+        public long? BargainId { get; set; }
     }
 }

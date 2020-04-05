@@ -7,6 +7,9 @@ namespace NuClear.ValidationRules.Import.Model
     {
         private static FluentMappingBuilder RegisterFacts(this FluentMappingBuilder builder)
         {
+            builder.Entity<Bargain>()
+                .HasSchemaName(FactsSchema);
+
             builder.Entity<OrderConsistency>()
                 .HasSchemaName(FactsSchema);
 

@@ -12,8 +12,6 @@ namespace NuClear.ValidationRules.Import.FactExtractors.FlowFinancialData
             yield return new Model.PersistentFacts.Account
             {
                 Id = account.Code,
-                LegalPersonId = account.LegalEntityCode,
-                BranchOfficeOrganizationUnitId = account.LegalEntityBranchCode,
                 Balance = account.Balance,
             };
 

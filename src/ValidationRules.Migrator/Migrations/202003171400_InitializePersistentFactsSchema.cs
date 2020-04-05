@@ -12,8 +12,6 @@ namespace NuClear.ValidationRules.Migrator.Migrations
             Create.Table("Account")
                 .InSchema("PersistentFacts")
                 .WithColumn("Id").AsInt64().PrimaryKey()
-                .WithColumn("BranchOfficeOrganizationUnitId").AsInt64()
-                .WithColumn("LegalPersonId").AsInt64()
                 .WithColumn("Balance").AsDecimal(19, 4);
 
             Create.Table("AccountDetail")

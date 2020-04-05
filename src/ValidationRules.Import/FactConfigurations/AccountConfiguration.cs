@@ -31,9 +31,10 @@ namespace NuClear.ValidationRules.Import.FactConfigurations
 
             var orderRelations =
                 from account in actual.Union(outdated)
+                from bargain in dataConnection.GetTable<Bargain>()
+                    .InnerJoin(x => x.AccountId == account.Id)
                 from order in dataConnection.GetTable<OrderConsistency>()
-                    .InnerJoin(x => x.LegalPersonId == account.LegalPersonId &&
-                        x.BranchOfficeOrganizationUnitId == account.BranchOfficeOrganizationUnitId)
+                    .InnerJoin(x => x.BargainId == bargain.Id)
                 select new RelationRecord(accountName, orderName, order.Id);
 
             var accountRelations =
